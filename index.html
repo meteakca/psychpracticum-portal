@@ -445,12 +445,25 @@ async function createProgram(){
   render();
 }
 
-async function assignProgramAdmin(profileId){
-  var progId=document.getElementById('sa-prog-'+profileId).value;
-  if(!progId){alert('Select a program first.');return;}
+async function superActivateUser(profileId){
+  var role=document.getElementById('su-role-'+profileId).value;
+  var name=document.getElementById('su-name-'+profileId).value.trim();
+  var progId=document.getElementById('su-prog-'+profileId).value;
+  if(!role||!name||!progId){alert('Name, role, and program are all required.');return;}
   S.loading=true;render();
-  await db.from('profiles').update({role:'admin',program_id:progId}).eq('id',profileId);
-  S.loading=false;S.msg='Program admin assigned!';
+  await db.from('profiles').update({role:role,name:name,program_id:progId}).eq('id',profileId);
+  if(role==='student'){
+    var site=document.getElementById('su-site-'+profileId).value||'';
+    var cohort=document.getElementById('su-cohort-'+profileId).value||'';
+    var reqH=parseInt(document.getElementById('su-reqs-'+profileId).value)||200;
+    var supId=document.getElementById('su-sup-'+profileId).value||null;
+    await db.from('students').upsert({profile_id:profileId,site:site,cohort:cohort,required_hours:reqH,supervisor_profile_id:supId||null,program_id:progId},{onConflict:'profile_id'});
+  } else if(role==='supervisor'){
+    var title=document.getElementById('su-title-'+profileId).value||'';
+    var org=document.getElementById('su-org-'+profileId).value||'';
+    await db.from('supervisors').upsert({profile_id:profileId,title:title,org:org,program_id:progId},{onConflict:'profile_id'});
+  }
+  S.loading=false;S.msg='User activated!';
   await loadSuperAdminData();render();
 }
 
@@ -642,9 +655,55 @@ function renderSuperPrograms(){
 function renderSuperUsers(){
   var pending=S.allProfiles.filter(function(p){return !p.role;});
   var active=S.allProfiles.filter(function(p){return !!p.role;});
+  var progOpts=S.programs.map(function(prog){return '<option value="'+prog.id+'">'+e(prog.name)+'</option>';}).join('');
+  // Build supervisor options per program for student assignment
+  var supOptsByProg={};
+  S.programs.forEach(function(prog){
+    supOptsByProg[prog.id]=S.allProfiles.filter(function(p){return p.role==='supervisor'&&p.program_id===prog.id;}).map(function(sv){return '<option value="'+sv.id+'">'+e(sv.name)+'</option>';}).join('');
+  });
+  var allSupOpts=S.allProfiles.filter(function(p){return p.role==='supervisor';}).map(function(sv){
+    var prog=S.programs.find(function(x){return x.id===sv.program_id;})||{};
+    return '<option value="'+sv.id+'">'+e(sv.name)+(prog.name?' ('+e(prog.name)+')':'')+'</option>';
+  }).join('');
+
   return '<div>'
-  +(pending.length?'<div class="card" style="margin-bottom:18px;border-left:4px solid var(--amber)"><div class="section-title" style="font-size:16px">&#9888; Pending Activation ('+pending.length+')</div>'
-    +pending.map(function(p){return '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">'+avt(p.name||'?',34)+'<div style="flex:1"><strong>'+(p.name||'(no name)')+'</strong> <span style="color:var(--textMu);font-size:12px">&mdash; '+e(p.email)+'</span></div><div style="display:flex;align-items:center;gap:8px"><select class="fld" id="sa-prog-'+p.id+'" style="width:200px"><option value="">Assign to program...</option>'+S.programs.map(function(prog){return '<option value="'+prog.id+'">'+e(prog.name)+' (admin)</option>';}).join('')+'</select><button class="btn btn-navy btn-sm" onclick="assignProgramAdmin(\''+p.id+'\')">Set as Admin</button></div></div>';}).join('')
+  +(pending.length?'<div class="card" style="margin-bottom:18px;border-left:4px solid var(--amber)"><div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><span style="font-size:20px">&#9888;</span><div class="section-title" style="margin-bottom:0;font-size:16px">Pending Activation ('+pending.length+')</div></div>'
+    +pending.map(function(p){
+      return '<div style="background:#FAFBFE;border-radius:10px;padding:16px;margin-bottom:12px">'
+        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'+avt(p.name||'?',36)+'<div><strong>'+(p.name||'(no name)')+'</strong><p style="font-size:12px;color:var(--textMu)">'+e(p.email)+'</p></div></div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">'
+          +'<div><label class="fld-label">Full Name *</label><input class="fld" id="su-name-'+p.id+'" value="'+e(p.name||'')+'" placeholder="First Last"></div>'
+          +'<div><label class="fld-label">Program *</label><select class="fld" id="su-prog-'+p.id+'"><option value="">Select program...</option>'+progOpts+'</select></div>'
+          +'<div><label class="fld-label">Role *</label><select class="fld" id="su-role-'+p.id+'" onchange="'
+            +'document.getElementById(\'su-extra-'+p.id+'\').style.display=this.value&&this.value!==\'admin\'?\'block\':\'none\';'
+            +'document.getElementById(\'su-student-'+p.id+'\').style.display=this.value===\'student\'?\'block\':\'none\';'
+            +'document.getElementById(\'su-supervisor-'+p.id+'\').style.display=this.value===\'supervisor\'?\'block\':\'none\''
+            +'">'
+            +'<option value="">Select role...</option>'
+            +'<option value="student">Student</option>'
+            +'<option value="supervisor">Site Supervisor</option>'
+            +'<option value="admin">Program Admin</option>'
+          +'</select></div>'
+        +'</div>'
+        +'<div id="su-extra-'+p.id+'" style="display:none">'
+          +'<div id="su-student-'+p.id+'" style="display:none">'
+            +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px">'
+              +'<div><label class="fld-label">Site</label><input class="fld" id="su-site-'+p.id+'" placeholder="School name"></div>'
+              +'<div><label class="fld-label">Cohort</label><input class="fld" id="su-cohort-'+p.id+'" placeholder="Spring 2026"></div>'
+              +'<div><label class="fld-label">Req. Hours</label><input class="fld" type="number" id="su-reqs-'+p.id+'" value="200"></div>'
+              +'<div><label class="fld-label">Supervisor</label><select class="fld" id="su-sup-'+p.id+'"><option value="">None yet</option>'+allSupOpts+'</select></div>'
+            +'</div>'
+          +'</div>'
+          +'<div id="su-supervisor-'+p.id+'" style="display:none">'
+            +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+              +'<div><label class="fld-label">Title / Credentials</label><input class="fld" id="su-title-'+p.id+'" placeholder="e.g. LPC, NCSP"></div>'
+              +'<div><label class="fld-label">Organization</label><input class="fld" id="su-org-'+p.id+'" placeholder="County Schools"></div>'
+            +'</div>'
+          +'</div>'
+        +'</div>'
+        +'<button class="btn btn-navy btn-sm" onclick="superActivateUser(\''+p.id+'\')">Activate Account</button>'
+      +'</div>';
+    }).join('')
     +'</div>':'')
   +'<div class="card"><div class="section-title" style="font-size:16px">All Active Users</div><div style="overflow-x:auto"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Program</th></tr></thead><tbody>'
   +active.map(function(p){
