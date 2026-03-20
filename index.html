@@ -405,30 +405,35 @@ async function addDomain(){
 async function saveRatingLabels(){
   var labels=[''];var rc=ratingCount();
   for(var i=1;i<=rc;i++){var el=document.getElementById('rl-'+i);labels.push(el?el.value.trim()||('Level '+i):'Level '+i);}
+  S.ratingLabels=labels;
   S.loading=true;render();
   await db.from('rubric_config').update({value:JSON.stringify(labels)}).eq('key','rating_labels').eq('program_id',S.currentProgramId);
   S.loading=false;S.msg='Rating labels updated!';
   await loadRubricConfig(S.currentProgramId);render();
 }
-function readLabelFields(){
-  var labels=[''];var rc=ratingCount();
-  for(var i=1;i<=rc;i++){var el=document.getElementById('rl-'+i);labels.push(el?el.value.trim()||('Level '+i):'Level '+i);}
-  return labels;
+async function saveRatingLabelsAndThen(newLabels){
+  S.ratingLabels = newLabels;
+  await db.from('rubric_config').update({value:JSON.stringify(newLabels)}).eq('key','rating_labels').eq('program_id',S.currentProgramId);
+  await loadRubricConfig(S.currentProgramId);
 }
 async function addRatingLevel(){
-  var labels=readLabelFields();
+  // Save current field values first, then append
+  var labels=[''];var rc=ratingCount();
+  for(var i=1;i<=rc;i++){var el=document.getElementById('rl-'+i);labels.push(el?el.value.trim()||S.ratingLabels[i]||('Level '+i):S.ratingLabels[i]||('Level '+i));}
   labels.push('Level '+labels.length);
   S.loading=true;render();
-  await db.from('rubric_config').update({value:JSON.stringify(labels)}).eq('key','rating_labels').eq('program_id',S.currentProgramId);
-  S.loading=false;S.msg='Level added!';await loadRubricConfig(S.currentProgramId);render();
+  await saveRatingLabelsAndThen(labels);
+  S.loading=false;S.msg='Level added!';render();
 }
 async function removeRatingLevel(){
   if(ratingCount()<=2){alert('Minimum 2 levels required.');return;}
-  var labels=readLabelFields();
+  // Save current field values first, then remove last
+  var labels=[''];var rc=ratingCount();
+  for(var i=1;i<=rc;i++){var el=document.getElementById('rl-'+i);labels.push(el?el.value.trim()||S.ratingLabels[i]||('Level '+i):S.ratingLabels[i]||('Level '+i));}
   labels=labels.slice(0,-1);
   S.loading=true;render();
-  await db.from('rubric_config').update({value:JSON.stringify(labels)}).eq('key','rating_labels').eq('program_id',S.currentProgramId);
-  S.loading=false;S.msg='Level removed!';await loadRubricConfig(S.currentProgramId);render();
+  await saveRatingLabelsAndThen(labels);
+  S.loading=false;S.msg='Level removed!';render();
 }
 
 // ── SUPER ADMIN ACTIONS ───────────────────────────────────────
