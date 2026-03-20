@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PsychPracticum Portal — Georgia Southern University</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#EEF2FA;color:#0F1929;min-height:100vh;font-size:14px}
+:root{--navy:#162B50;--navyM:#1E3A6A;--gold:#C4922A;--bg:#EEF2FA;--border:#D5DCF0;--textM:#435380;--textMu:#8895B8;--green:#1C7C54;--greenBg:#E6F5EE;--amber:#B45309;--amberBg:#FEF3C7;--red:#C0392B}
+button{cursor:pointer;font-family:inherit;font-size:13px}
+input,select,textarea{font-family:inherit;font-size:14px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)!important;box-shadow:0 0 0 3px rgba(196,146,42,.18)}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:#bbc;border-radius:3px}
+header{background:var(--navy);color:#fff;padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.22)}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:34px;height:34px;border-radius:8px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:17px}
+.logo-text{font-size:16px;font-weight:700}
+.logo-sub{font-size:11px;color:#8BAAD4;margin-left:10px}
+.hdr-right{display:flex;align-items:center;gap:14px}
+.hdr-user{text-align:right}
+.hdr-user p:first-child{font-size:11px;color:#8BAAD4}
+.hdr-user p:last-child{font-size:13px;font-weight:600}
+main{max-width:1100px;margin:0 auto;padding:24px 20px}
+footer{background:var(--navy);color:#8BAAD4;padding:18px 28px;margin-top:48px;text-align:center;font-size:12px}
+.card{background:#fff;border-radius:12px;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.04);padding:22px}
+.tabs{display:flex;gap:4px;margin-bottom:22px;background:#E4E9F5;border-radius:10px;padding:4px}
+.tab-btn{flex:1;padding:8px 14px;border-radius:7px;border:none;font-size:13px;font-weight:600;background:transparent;color:var(--textM);transition:all .2s;cursor:pointer}
+.tab-btn.active{background:#fff;color:var(--navy);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:750px){.g4{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr}.g2{grid-template-columns:1fr}}
+.tag{display:inline-block;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700}
+.tag-navy{background:rgba(22,43,80,.1);color:var(--navy)}
+.tag-green{background:var(--greenBg);color:var(--green)}
+.tag-amber{background:var(--amberBg);color:var(--amber)}
+.tag-red{background:#fde8e8;color:var(--red)}
+.avatar{border-radius:50%;background:var(--navyM);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+.progress-track{background:#E4E9F5;border-radius:99px;height:8px;overflow:hidden}
+.progress-fill{height:100%;border-radius:99px;transition:width .4s}
+label.fld-label{font-size:11px;font-weight:700;color:var(--textMu);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px}
+.fld{width:100%;padding:9px 13px;border:1.5px solid var(--border);border-radius:8px;color:var(--navy);background:#FAFBFE}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:7px 11px;text-align:left;color:var(--textMu);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--border);white-space:nowrap}
+td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:nth-child(even) td{background:#FAFBFE}
+.stat-card{background:#fff;border-radius:10px;border:1px solid var(--border);text-align:center;padding:18px 10px}
+.stat-num{font-size:28px;font-weight:700;color:var(--navy)}
+.stat-lbl{font-size:12px;color:var(--textMu);margin-top:3px;font-weight:500}
+.btn{padding:10px 24px;border-radius:8px;border:none;font-weight:600;font-size:13px;cursor:pointer;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btn-navy{background:var(--navy);color:#fff}
+.btn-gold{background:var(--gold);color:#fff}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--textM)}
+.btn-outline:hover{background:#f0f3fa}
+.btn-sm{padding:6px 14px;font-size:12px}
+.btn-danger{background:var(--red);color:#fff}
+.student-hero{background:var(--navy);border-radius:12px;color:#fff;padding:22px;margin-bottom:20px}
+.hero-hrs{font-size:42px;font-weight:800;color:var(--gold);line-height:1}
+.hero-sub{font-size:11px;color:#8BAAD4}
+.hero-progress{background:rgba(255,255,255,.15);border-radius:99px;height:10px;overflow:hidden;margin-top:10px}
+.hero-bar{height:100%;border-radius:99px;background:var(--gold)}
+.recent-item{display:flex;gap:12px;align-items:flex-start;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--border)}
+.recent-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.recent-icon{width:38px;height:38px;border-radius:9px;background:#FDF5E0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--gold)}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px}
+.bar-label{width:155px;color:var(--textM);text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{flex:1;background:#E4E9F5;border-radius:4px;height:18px}
+.bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:7px;font-size:11px;font-weight:700;color:#fff;min-width:28px}
+.domain-card{background:#fff;border-radius:10px;border:1px solid var(--border);padding:18px;margin-bottom:14px}
+.rating-btn{padding:6px 12px;border-radius:8px;border:2px solid var(--border);background:transparent;color:var(--textM);font-weight:600;font-size:12px;cursor:pointer;margin:0 4px 6px 0}
+.section-title{font-size:18px;font-weight:700;margin-bottom:16px;color:var(--navy)}
+.spin{display:inline-block;width:18px;height:18px;border:2px solid #ddd;border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.msg-ok{padding:10px 16px;background:var(--greenBg);color:var(--green);border-radius:8px;font-size:13px;font-weight:600;margin-bottom:16px}
+.msg-err{padding:10px 16px;background:#fde8e8;color:var(--red);border-radius:8px;font-size:13px;font-weight:600;margin-bottom:16px}
+
+/* Auth screen */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--navy);padding:20px}
+.auth-card{background:#fff;border-radius:16px;padding:36px 32px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+.auth-logo-icon{width:38px;height:38px;border-radius:9px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:18px}
+.auth-tabs{display:flex;background:#EEF2FA;border-radius:8px;padding:3px;margin-bottom:22px}
+.auth-tab{flex:1;padding:7px;border-radius:6px;border:none;font-size:13px;font-weight:600;background:transparent;color:var(--textM);cursor:pointer}
+.auth-tab.active{background:#fff;color:var(--navy)}
+.config-notice{background:#FEF3C7;border:1px solid #F59E0B;border-radius:10px;padding:16px;margin:20px;font-size:13px;color:#92400E}
+.config-notice code{background:rgba(0,0,0,.08);padding:1px 5px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+
+<div id="app"><div style="min-height:100vh;display:flex;align-items:center;justify-content:center"><span class="spin"></span></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+// ══════════════════════════════════════════════════════════════
+//  CONFIG — paste your Supabase values here after setup
+// ══════════════════════════════════════════════════════════════
+var SUPABASE_URL  = 'https://wemaqwbdfntgugiacgsf.supabase.co';
+var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWFxd2JkZm50Z3VnaWFjZ3NmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMTk2NDMsImV4cCI6MjA4OTU5NTY0M30.SwKny4AQ04JcfKgUWUfMDJGSHeJrpII_PYuo6zNJDZw';
+
+// ── CONSTANTS ─────────────────────────────────────────────────
+var ACTIVITIES = [
+  'Assessment / Evaluation','Consultation','Counseling - Individual',
+  'Counseling - Group','Crisis Intervention','Observation','Report Writing',
+  'Team Meeting / IEP','Parent / Family Consultation','Professional Development',
+  'Supervision','Other'
+];
+var RATING_LABELS = ['','Beginning','Developing','Proficient','Advanced','Distinguished'];
+var RC = ['','#C0392B','#C67C00','#B45309','#2E7D52','#1C7C54'];
+var NASP = [
+  {id:1,name:'Data-Based Decision Making',desc:'Uses varied assessment methods to understand strengths and needs; guides interventions and measures outcomes.'},
+  {id:2,name:'Consultation & Collaboration',desc:'Collaborates with educators, families, and community partners to implement evidence-based practices.'},
+  {id:3,name:'Academic Interventions & Instructional Support',desc:'Designs, implements, and evaluates academic interventions linked to student data.'},
+  {id:4,name:'Mental & Behavioral Health Services',desc:'Provides prevention, early intervention, and treatment for mental and behavioral health needs.'},
+  {id:5,name:'School-Wide Practices to Promote Learning',desc:'Contributes to multi-tiered systems of support, PBIS, and school climate initiatives.'},
+  {id:6,name:'Preventive & Responsive Services',desc:'Demonstrates crisis prevention, intervention, and postvention competencies.'},
+  {id:7,name:'Family-School-Community Collaboration',desc:'Engages families and community agencies to promote student and family success.'},
+  {id:8,name:'Equitable Practices for Diverse Populations',desc:'Applies culturally responsive, linguistically appropriate, and equitable practices.'},
+  {id:9,name:'Research & Evidence-Based Practice',desc:'Translates and applies research to inform professional practice and program evaluation.'},
+  {id:10,name:'Legal, Ethical & Professional Practice',desc:'Adheres to IDEA/FERPA requirements, NASP/APA ethical codes, and professional standards.'}
+];
+
+// ── STATE ─────────────────────────────────────────────────────
+var S = {
+  screen: 'loading',
+  profile: null,
+  // student
+  studentRec: null,
+  hours: [],
+  rubric: null,
+  supProfile: null,
+  studentTab: 'dashboard',
+  // supervisor
+  supStudents: [],
+  supStudentProfiles: {},
+  supHours: {},
+  supRubrics: {},
+  supSelected: null,
+  supTab: 'list',
+  supDetailTab: 'detail',
+  supRubricState: {},
+  // admin
+  adminTab: 'overview',
+  allProfiles: [],
+  allStudents: [],
+  allSupervisors: [],
+  allHours: [],
+  allRubrics: [],
+  adminEditId: null,
+  // ui
+  loading: false,
+  msg: null,
+  err: null,
+  authTab: 'login'
+};
+
+// ── HELPERS ───────────────────────────────────────────────────
+function e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function pct(v,max){return Math.min(100,Math.round(v/max*100));}
+function sColor(p){return p>=75?'#1C7C54':p>=40?'#B45309':'#C0392B';}
+function fmt(d){if(!d)return '—';return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function ini(name){return String(name||'?').split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase();}
+function avt(name,size){size=size||36;return '<div class="avatar" style="width:'+size+'px;height:'+size+'px;font-size:'+Math.round(size*.36)+'px">'+ini(name)+'</div>';}
+function tag(text,cls){cls=cls||'tag-navy';return '<span class="tag '+cls+'">'+e(text)+'</span>';}
+function pb(val,max,color){var w=pct(val,max);return '<div class="progress-track"><div class="progress-fill" style="width:'+w+'%;background:'+(color||'var(--gold)')+'"></div></div>';}
+function actBar(hours){
+  var acts=ACTIVITIES.map(function(a){return{name:a,h:hours.filter(function(x){return x.activity===a;}).reduce(function(s,x){return s+parseFloat(x.duration);},0)};}).filter(function(a){return a.h>0;}).sort(function(a,b){return b.h-a.h;});
+  if(!acts.length) return '<p style="color:var(--textMu);font-size:13px">No hours logged yet.</p>';
+  var mx=acts[0].h;
+  return acts.map(function(a){return '<div class="bar-row"><div class="bar-label" title="'+e(a.name)+'">'+e(a.name)+'</div><div class="bar-track"><div class="bar-fill" style="width:'+Math.round(a.h/mx*100)+'%;background:var(--navy)">'+a.h+'h</div></div></div>';}).join('');
+}
+function sumH(hours){return hours.reduce(function(s,h){return s+parseFloat(h.duration);},0);}
+
+// ── SUPABASE INIT ─────────────────────────────────────────────
+var db = null;
+if(SUPABASE_URL !== 'YOUR_SUPABASE_URL' && typeof supabase !== 'undefined'){
+  db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+}
+
+// ── DATA FUNCTIONS ────────────────────────────────────────────
+async function loadUserData(userId){
+  var res = await db.from('profiles').select('*').eq('id',userId).single();
+  S.profile = res.data;
+  if(!S.profile || !S.profile.role){S.screen='pending';return;}
+  if(S.profile.role==='student'){S.screen='student';await loadStudentData();}
+  else if(S.profile.role==='supervisor'){S.screen='supervisor';await loadSupervisorData();}
+  else if(S.profile.role==='admin'){S.screen='admin';await loadAdminData();}
+}
+
+async function loadStudentData(){
+  var r1 = await db.from('students').select('*').eq('profile_id',S.profile.id).single();
+  S.studentRec = r1.data;
+  if(!S.studentRec) return;
+  var r2 = await db.from('hours').select('*').eq('student_id',S.studentRec.id).order('date',{ascending:false});
+  S.hours = r2.data || [];
+  var r3 = await db.from('rubrics').select('*').eq('student_id',S.studentRec.id).single();
+  S.rubric = r3.data;
+  if(S.studentRec.supervisor_profile_id){
+    var r4 = await db.from('profiles').select('*').eq('id',S.studentRec.supervisor_profile_id).single();
+    S.supProfile = r4.data;
+    var r5 = await db.from('supervisors').select('*').eq('profile_id',S.studentRec.supervisor_profile_id).single();
+    if(r5.data){S.supProfile = Object.assign({},S.supProfile,r5.data);}
+  }
+}
+
+async function loadSupervisorData(){
+  var r1 = await db.from('students').select('*').eq('supervisor_profile_id',S.profile.id);
+  S.supStudents = r1.data || [];
+  S.supStudentProfiles = {};
+  S.supHours = {};
+  S.supRubrics = {};
+  for(var i=0;i<S.supStudents.length;i++){
+    var st = S.supStudents[i];
+    var rp = await db.from('profiles').select('*').eq('id',st.profile_id).single();
+    S.supStudentProfiles[st.id] = rp.data || {};
+    var rh = await db.from('hours').select('*').eq('student_id',st.id).order('date',{ascending:false});
+    S.supHours[st.id] = rh.data || [];
+    var rr = await db.from('rubrics').select('*').eq('student_id',st.id).single();
+    S.supRubrics[st.id] = rr.data;
+  }
+}
+
+async function loadAdminData(){
+  var results = await Promise.all([
+    db.from('profiles').select('*').order('name'),
+    db.from('students').select('*'),
+    db.from('supervisors').select('*'),
+    db.from('hours').select('*'),
+    db.from('rubrics').select('*')
+  ]);
+  S.allProfiles   = results[0].data || [];
+  S.allStudents   = results[1].data || [];
+  S.allSupervisors= results[2].data || [];
+  S.allHours      = results[3].data || [];
+  S.allRubrics    = results[4].data || [];
+}
+
+// ── AUTH ──────────────────────────────────────────────────────
+async function init(){
+  if(!db){render();return;}
+  var res = await db.auth.getSession();
+  if(res.data.session){
+    await loadUserData(res.data.session.user.id);
+  } else {
+    S.screen='auth';
+  }
+  render();
+  db.auth.onAuthStateChange(async function(event,session){
+    if(event==='SIGNED_OUT'){
+      S={screen:'auth',profile:null,msg:null,err:null,authTab:'login',studentTab:'dashboard',supTab:'list',supSelected:null,supDetailTab:'detail',adminTab:'overview',loading:false,hours:[],rubric:null,supStudents:[],supStudentProfiles:{},supHours:{},supRubrics:{},supRubricState:{},allProfiles:[],allStudents:[],allSupervisors:[],allHours:[],allRubrics:[],adminEditId:null,studentRec:null,supProfile:null};
+      render();
+    }
+  });
+}
+
+async function doSignIn(){
+  var email=document.getElementById('a-email').value.trim();
+  var pass=document.getElementById('a-pass').value;
+  if(!email||!pass){S.err='Please enter email and password.';render();return;}
+  S.loading=true;render();
+  var res = await db.auth.signInWithPassword({email:email,password:pass});
+  S.loading=false;
+  if(res.error){S.err=res.error.message;render();return;}
+  S.err=null;
+  await loadUserData(res.data.user.id);
+  render();
+}
+
+async function doRegister(){
+  var name=document.getElementById('r-name').value.trim();
+  var email=document.getElementById('r-email').value.trim();
+  var pass=document.getElementById('r-pass').value;
+  var pass2=document.getElementById('r-pass2').value;
+  if(!name||!email||!pass){S.err='All fields are required.';render();return;}
+  if(pass!==pass2){S.err='Passwords do not match.';render();return;}
+  if(pass.length<8){S.err='Password must be at least 8 characters.';render();return;}
+  S.loading=true;render();
+  var res = await db.auth.signUp({email:email,password:pass,options:{data:{name:name}}});
+  S.loading=false;
+  if(res.error){S.err=res.error.message;render();return;}
+  S.err=null;
+  S.screen='pending';
+  S.profile={name:name,email:email,role:null};
+  render();
+}
+
+async function doSignOut(){
+  await db.auth.signOut();
+}
+
+// ── STUDENT ACTIONS ───────────────────────────────────────────
+async function submitHours(){
+  var date=document.getElementById('f-date').value;
+  var dur=parseFloat(document.getElementById('f-dur').value);
+  var act=document.getElementById('f-act').value;
+  var site=document.getElementById('f-site').value;
+  var notes=document.getElementById('f-notes').value;
+  if(!date||!dur||!act){S.err='Date, Duration, and Activity Type are required.';render();return;}
+  S.loading=true;render();
+  var res = await db.from('hours').insert({
+    student_id:S.studentRec.id,date:date,duration:dur,activity:act,site:site,notes:notes
+  });
+  S.loading=false;
+  if(res.error){S.err=res.error.message;render();return;}
+  S.msg='Hours entry saved!';
+  await loadStudentData();
+  S.studentTab='history';
+  render();
+}
+
+// ── SUPERVISOR ACTIONS ────────────────────────────────────────
+function getSupRubricState(studentId){
+  if(!S.supRubricState[studentId]){
+    var ex=S.supRubrics[studentId];
+    S.supRubricState[studentId]={ratings:{},comments:{},narrative:''};
+    NASP.forEach(function(d){
+      S.supRubricState[studentId].ratings[d.id]=ex&&ex.ratings?ex.ratings[d.id]||0:0;
+      S.supRubricState[studentId].comments[d.id]=ex&&ex.comments?ex.comments[d.id]||'':'';
+    });
+    S.supRubricState[studentId].narrative=ex?ex.narrative||'':'';
+  }
+  return S.supRubricState[studentId];
+}
+
+function setRating(studentId,did,val){
+  getSupRubricState(studentId).ratings[did]=val;
+  document.querySelectorAll('.rating-btn[data-did="'+did+'"]').forEach(function(b){
+    var r=+b.getAttribute('data-r');
+    b.style.borderColor=r===val?RC[val]:'var(--border)';
+    b.style.background=r===val?RC[val]+'20':'transparent';
+    b.style.color=r===val?RC[val]:'var(--textM)';
+  });
+}
+function saveRubricComment(sid,did,val){getSupRubricState(sid).comments[did]=val;}
+function saveRubricNarrative(sid,val){getSupRubricState(sid).narrative=val;}
+
+async function submitRubric(studentId){
+  var rs=getSupRubricState(studentId);
+  var allRated=NASP.every(function(d){return rs.ratings[d.id]>0;});
+  if(!allRated){alert('Please rate all 10 NASP domains before submitting.');return;}
+  var narEl=document.getElementById('r-narrative');
+  if(narEl) rs.narrative=narEl.value;
+  S.loading=true;render();
+  var res = await db.from('rubrics').upsert({
+    student_id:studentId,
+    supervisor_profile_id:S.profile.id,
+    ratings:rs.ratings,
+    comments:rs.comments,
+    narrative:rs.narrative,
+    completed_date:new Date().toISOString().split('T')[0],
+    updated_at:new Date().toISOString()
+  },{onConflict:'student_id'});
+  S.loading=false;
+  if(res.error){S.err=res.error.message;render();return;}
+  delete S.supRubricState[studentId];
+  S.msg='Rubric saved successfully!';
+  await loadSupervisorData();
+  S.supDetailTab='detail';
+  render();
+}
+
+// ── ADMIN ACTIONS ─────────────────────────────────────────────
+async function adminActivateUser(profileId){
+  var role=document.getElementById('au-role-'+profileId).value;
+  var name=document.getElementById('au-name-'+profileId).value.trim();
+  if(!role||!name){alert('Name and role are required.');return;}
+  S.loading=true;render();
+  var res = await db.from('profiles').update({role:role,name:name}).eq('id',profileId);
+  if(res.error){S.loading=false;S.err=res.error.message;render();return;}
+  if(role==='student'){
+    var site=document.getElementById('au-site-'+profileId).value||'';
+    var cohort=document.getElementById('au-cohort-'+profileId).value||'';
+    var reqH=parseInt(document.getElementById('au-reqs-'+profileId).value)||200;
+    var supId=document.getElementById('au-sup-'+profileId).value||null;
+    await db.from('students').upsert({profile_id:profileId,site:site,cohort:cohort,required_hours:reqH,supervisor_profile_id:supId||null},{onConflict:'profile_id'});
+  } else if(role==='supervisor'){
+    var title=document.getElementById('au-title-'+profileId).value||'';
+    var org=document.getElementById('au-org-'+profileId).value||'';
+    await db.from('supervisors').upsert({profile_id:profileId,title:title,org:org},{onConflict:'profile_id'});
+  }
+  S.loading=false;S.msg='User configured successfully!';
+  await loadAdminData();
+  render();
+}
+
+async function adminSaveStudent(studentId){
+  var site=document.getElementById('es-site-'+studentId).value||'';
+  var cohort=document.getElementById('es-cohort-'+studentId).value||'';
+  var reqH=parseInt(document.getElementById('es-reqs-'+studentId).value)||200;
+  var supId=document.getElementById('es-sup-'+studentId).value||null;
+  S.loading=true;render();
+  await db.from('students').update({site:site,cohort:cohort,required_hours:reqH,supervisor_profile_id:supId||null}).eq('id',studentId);
+  S.loading=false;S.msg='Student updated!';
+  await loadAdminData();
+  S.adminEditId=null;
+  render();
+}
+
+async function adminSaveSupervisor(supId){
+  var title=document.getElementById('es-title-'+supId).value||'';
+  var org=document.getElementById('es-org-'+supId).value||'';
+  S.loading=true;render();
+  await db.from('supervisors').update({title:title,org:org}).eq('id',supId);
+  S.loading=false;S.msg='Supervisor updated!';
+  await loadAdminData();
+  S.adminEditId=null;
+  render();
+}
+
+function exportCSV(){
+  var lines=['Student Name,Email,Site,Cohort,Supervisor,Required Hours,Logged Hours,Progress,Rubric Complete'];
+  S.allStudents.forEach(function(st){
+    var prof=S.allProfiles.find(function(p){return p.id===st.profile_id;})||{};
+    var sup=S.allProfiles.find(function(p){return p.id===st.supervisor_profile_id;})||{};
+    var hrs=S.allHours.filter(function(h){return h.student_id===st.id;}).reduce(function(s,h){return s+parseFloat(h.duration);},0);
+    var p=pct(hrs,st.required_hours);
+    var rb=S.allRubrics.find(function(r){return r.student_id===st.id;});
+    lines.push([prof.name,prof.email,st.site,st.cohort,sup.name||'',st.required_hours,hrs.toFixed(1),p+'%',rb?'Yes':'No'].map(function(v){return '"'+(v||'').replace(/"/g,'""')+'"';}).join(','));
+  });
+  var blob=new Blob([lines.join('\n')],{type:'text/csv'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='psychpracticum-export-'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();
+}
+
+function exportHoursCSV(){
+  var lines=['Student Name,Date,Duration,Activity,Site,Notes'];
+  S.allHours.forEach(function(h){
+    var st=S.allStudents.find(function(s){return s.id===h.student_id;})||{};
+    var prof=S.allProfiles.find(function(p){return p.id===st.profile_id;})||{};
+    lines.push([prof.name,h.date,h.duration,h.activity,h.site,h.notes].map(function(v){return '"'+(v||'').replace(/"/g,'""')+'"';}).join(','));
+  });
+  var blob=new Blob([lines.join('\n')],{type:'text/csv'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='psychpracticum-hours-'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+function render(){
+  var app=document.getElementById('app');
+  if(!db){
+    app.innerHTML='<div class="config-notice"><strong>Configuration needed:</strong> Open <code>psychpracticum-v2.html</code> in a text editor, find the CONFIG section near the top, and replace <code>YOUR_SUPABASE_URL</code> and <code>YOUR_SUPABASE_ANON_KEY</code> with your actual values from Supabase. See the setup guide for instructions.</div>';
+    return;
+  }
+  if(S.screen==='loading'){
+    app.innerHTML='<div style="min-height:100vh;display:flex;align-items:center;justify-content:center"><span class="spin"></span></div>';
+    return;
+  }
+  if(S.screen==='auth'){app.innerHTML=renderAuth();return;}
+
+  var inner='';
+  if(S.screen==='pending') inner=renderPending();
+  else if(S.screen==='student') inner=renderStudent();
+  else if(S.screen==='supervisor') inner=renderSupervisor();
+  else if(S.screen==='admin') inner=renderAdmin();
+
+  var role={student:'Student Portal',supervisor:'Site Supervisor Portal',admin:'Admin (Faculty) Portal'}[S.screen]||'';
+  app.innerHTML='<header><div class="logo"><div class="logo-icon">&#x1F985;</div><div><span class="logo-text">PsychPracticum</span><span class="logo-sub">Georgia Southern University &middot; College of Education</span></div></div><div class="hdr-right"><div class="hdr-user"><p>'+e(role)+'</p><p>'+e(S.profile&&S.profile.name||'')+'</p></div><button class="btn btn-outline btn-sm" onclick="doSignOut()">Sign out</button></div></header><main>'+msgHtml()+'<div>'+inner+'</div></main><footer>PsychPracticum Portal &middot; School Psychology Program &middot; College of Education, Georgia Southern University</footer>';
+}
+
+function msgHtml(){
+  if(S.msg){var m=S.msg;S.msg=null;return '<div class="msg-ok">&#10003; '+e(m)+'</div>';}
+  if(S.err){var er=S.err;S.err=null;return '<div class="msg-err">'+e(er)+'</div>';}
+  return '';
+}
+
+// ── AUTH SCREEN ───────────────────────────────────────────────
+function renderAuth(){
+  return '<div class="auth-wrap"><div class="auth-card">'
+    +'<div class="auth-logo"><div class="auth-logo-icon">&#x1F985;</div><div><strong style="font-size:16px;color:var(--navy)">PsychPracticum</strong><p style="font-size:11px;color:var(--textMu)">Georgia Southern University</p></div></div>'
+    +(S.err?'<div class="msg-err">'+e(S.err)+'</div>':'')
+    +'<div class="auth-tabs"><button class="auth-tab'+(S.authTab==='login'?' active':'')+'" onclick="S.authTab=\'login\';S.err=null;render()">Sign In</button><button class="auth-tab'+(S.authTab==='register'?' active':'')+'" onclick="S.authTab=\'register\';S.err=null;render()">Register</button></div>'
+    +(S.authTab==='login'?renderLogin():renderRegister())
+    +'</div></div>';
+}
+
+function renderLogin(){
+  return '<div><label class="fld-label">Email</label><input class="fld" id="a-email" type="email" placeholder="your@email.edu" style="margin-bottom:14px"><label class="fld-label">Password</label><input class="fld" id="a-pass" type="password" placeholder="Password" style="margin-bottom:22px" onkeydown="if(event.key===\'Enter\')doSignIn()"><button class="btn btn-navy" style="width:100%" onclick="doSignIn()">'+(S.loading?'<span class="spin"></span> Signing in...':'Sign In')+'</button></div>';
+}
+
+function renderRegister(){
+  return '<div><label class="fld-label">Full Name</label><input class="fld" id="r-name" type="text" placeholder="First Last" style="margin-bottom:14px"><label class="fld-label">Email</label><input class="fld" id="r-email" type="email" placeholder="your@email.edu" style="margin-bottom:14px"><label class="fld-label">Password</label><input class="fld" id="r-pass" type="password" placeholder="At least 8 characters" style="margin-bottom:14px"><label class="fld-label">Confirm Password</label><input class="fld" id="r-pass2" type="password" placeholder="Repeat password" style="margin-bottom:22px"><button class="btn btn-navy" style="width:100%" onclick="doRegister()">'+(S.loading?'<span class="spin"></span> Creating account...':'Create Account')+'</button><p style="font-size:12px;color:var(--textMu);margin-top:14px;text-align:center">After registering, an admin will activate your account before you can log in.</p></div>';
+}
+
+function renderPending(){
+  return '<div style="max-width:500px;margin:60px auto"><div class="card" style="text-align:center;padding:40px"><div style="font-size:40px;margin-bottom:16px">&#x23F3;</div><h2 style="font-size:22px;font-weight:700;margin-bottom:10px">Account Pending Activation</h2><p style="color:var(--textMu);font-size:14px;line-height:1.7;margin-bottom:24px">Your account has been created. A program administrator needs to assign your role before you can access the portal. You will be notified when your account is activated.</p><button class="btn btn-outline" onclick="doSignOut()">Sign Out</button></div></div>';
+}
+
+// ── STUDENT PORTAL ────────────────────────────────────────────
+function renderStudent(){
+  var req=S.studentRec?S.studentRec.required_hours:200;
+  return '<div class="tabs"><button class="tab-btn'+(S.studentTab==='dashboard'?' active':'')+'" onclick="S.studentTab=\'dashboard\';render()">Dashboard</button><button class="tab-btn'+(S.studentTab==='log'?' active':'')+'" onclick="S.studentTab=\'log\';render()">Log Hours</button><button class="tab-btn'+(S.studentTab==='history'?' active':'')+'" onclick="S.studentTab=\'history\';render()">History</button></div>'
+    +(!S.studentRec?'<div class="card"><p style="color:var(--textMu)">Your student record is being set up by an administrator. Check back soon.</p></div>':S.studentTab==='dashboard'?renderStudentDash(req):S.studentTab==='log'?renderLogForm():renderHoursHistory());
+}
+
+function renderStudentDash(req){
+  var total=sumH(S.hours);
+  var p=pct(total,req);
+  var recent=S.hours.slice(0,4);
+  var actTypes=[];S.hours.forEach(function(h){if(actTypes.indexOf(h.activity)<0)actTypes.push(h.activity);});
+  var lastD=S.hours.length?fmt(S.hours[0].date):'—';
+  return '<div class="student-hero"><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px"><div><p class="hero-sub">Welcome back,</p><h2 style="font-size:24px;font-weight:700;margin:4px 0">'+e(S.profile.name)+'</h2><p class="hero-sub" style="margin-top:4px">'+e(S.studentRec.site||'')+(S.supProfile?' &middot; Supervisor: '+e(S.supProfile.name):'')+'</p></div><div style="text-align:right"><p class="hero-sub">Hours Completed</p><div class="hero-hrs">'+total.toFixed(1)+'</div><p class="hero-sub">of '+req+' required</p></div></div><div style="margin-top:18px"><div style="display:flex;justify-content:space-between;font-size:11px;color:#8BAAD4;margin-bottom:5px"><span>Progress toward requirement</span><span style="font-weight:700">'+p+'%</span></div><div class="hero-progress"><div class="hero-bar" style="width:'+p+'%"></div></div><p class="hero-sub" style="margin-top:5px">'+Math.max(0,req-total).toFixed(1)+' hours remaining</p></div></div>'
+  +'<div class="g3" style="margin-bottom:18px">'+[{l:'Entries Logged',v:S.hours.length},{l:'Activity Types',v:actTypes.length},{l:'Last Entry',v:lastD}].map(function(x){return '<div class="stat-card"><div class="stat-num">'+x.v+'</div><div class="stat-lbl">'+x.l+'</div></div>';}).join('')+'</div>'
+  +'<div class="g2"><div class="card"><div class="section-title" style="font-size:15px">Hours by Activity</div>'+actBar(S.hours)+'</div>'
+  +'<div class="card"><div class="section-title" style="font-size:15px">Recent Activity</div>'+(recent.length===0?'<p style="color:var(--textMu);font-size:13px">No entries yet.</p>':recent.map(function(h){return '<div class="recent-item"><div class="recent-icon">'+parseFloat(h.duration)+'h</div><div><p style="font-weight:600;font-size:13px">'+e(h.activity)+'</p><p style="font-size:11px;color:var(--textMu);margin-top:2px">'+fmt(h.date)+'</p></div></div>';}).join(''))+'</div></div>'
+  +(S.rubric?'<div class="card" style="margin-top:18px;border-left:4px solid var(--green)"><div style="display:flex;align-items:center;gap:12px"><span style="font-size:24px">&#10003;</span><div><strong>Semester Rubric Completed</strong><p style="font-size:13px;color:var(--textMu)">Submitted by '+e(S.supProfile?S.supProfile.name:'your supervisor')+' on '+fmt(S.rubric.completed_date)+'</p></div></div></div>':'');
+}
+
+function renderLogForm(){
+  var today=new Date().toISOString().split('T')[0];
+  return '<div style="max-width:600px"><div class="card"><div class="section-title">Log Practicum Hours</div><p style="color:var(--textMu);font-size:13px;margin-bottom:20px">Record an activity for the current practicum period.</p><div class="g2" style="margin-bottom:14px"><div><label class="fld-label">Date *</label><input type="date" class="fld" id="f-date" value="'+today+'"></div><div><label class="fld-label">Duration (hours) *</label><input type="number" class="fld" id="f-dur" placeholder="e.g. 2.5" min="0.25" max="12" step="0.25"></div></div><div style="margin-bottom:14px"><label class="fld-label">Activity Type *</label><select class="fld" id="f-act"><option value="">Select activity type...</option>'+ACTIVITIES.map(function(a){return '<option value="'+e(a)+'">'+e(a)+'</option>';}).join('')+'</select></div><div style="margin-bottom:14px"><label class="fld-label">Site / Placement Location</label><input class="fld" id="f-site" value="'+e(S.studentRec&&S.studentRec.site||'')+'"></div><div style="margin-bottom:20px"><label class="fld-label">Notes / Reflection</label><textarea class="fld" id="f-notes" rows="4" placeholder="Describe the activity, skills practiced, insights gained..."></textarea></div><button class="btn btn-navy" onclick="submitHours()">'+(S.loading?'<span class="spin"></span> Saving...':'Submit Hours')+'</button></div></div>';
+}
+
+function renderHoursHistory(){
+  var sorted=S.hours;
+  var total=sumH(sorted);
+  return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px"><div class="section-title" style="margin-bottom:0">'+sorted.length+' Logged Entries</div>'+tag(total.toFixed(1)+' hrs total','tag-navy')+'</div>'+(sorted.length===0?'<p style="color:var(--textMu);font-size:13px">No entries yet. Click "Log Hours" to get started.</p>':'<div style="overflow-x:auto"><table><thead><tr><th>Date</th><th>Duration</th><th>Activity</th><th>Site</th><th>Notes</th></tr></thead><tbody>'+sorted.map(function(h){return '<tr><td style="color:var(--textM);white-space:nowrap">'+fmt(h.date)+'</td><td style="font-weight:700">'+parseFloat(h.duration)+'h</td><td>'+tag(h.activity,'tag-navy')+'</td><td style="color:var(--textM)">'+e(h.site)+'</td><td style="color:var(--textMu);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+e(h.notes)+'">'+e(h.notes||'—')+'</td></tr>';}).join('')+'</tbody></table></div>')+'</div>';
+}
+
+// ── SUPERVISOR PORTAL ─────────────────────────────────────────
+function renderSupervisor(){
+  if(S.supSelected){
+    var st=S.supStudents.find(function(x){return x.id===S.supSelected;});
+    var sp=S.supStudentProfiles[S.supSelected]||{};
+    return '<button class="btn btn-outline btn-sm" style="margin-bottom:18px" onclick="S.supSelected=null;render()">&#8592; Back to Students</button>'
+      +'<div class="tabs"><button class="tab-btn'+(S.supDetailTab==='detail'?' active':'')+'" onclick="S.supDetailTab=\'detail\';render()">Hours Detail</button><button class="tab-btn'+(S.supDetailTab==='rubric'?' active':'')+'" onclick="S.supDetailTab=\'rubric\';render()">Semester Rubric</button></div>'
+      +(S.supDetailTab==='detail'?renderSupDetail(st,sp):renderRubricForm(st,sp));
+  }
+  return '<div style="margin-bottom:20px"><div class="section-title" style="font-size:22px">My Practicum Students</div><p style="color:var(--textMu);font-size:13px">'+e(S.profile.name)+'</p></div>'
+  +(S.supStudents.length===0?'<div class="card"><p style="color:var(--textMu)">No students assigned yet. Contact your program administrator.</p></div>':
+    S.supStudents.map(function(st){
+      var sp=S.supStudentProfiles[st.id]||{};
+      var hrs=S.supHours[st.id]||[];
+      var total=sumH(hrs);var p=pct(total,st.required_hours);var rd=!!S.supRubrics[st.id];
+      return '<div class="card" style="display:flex;align-items:center;gap:16px;cursor:pointer;margin-bottom:14px;flex-wrap:wrap" onclick="S.supSelected=\''+st.id+'\';S.supDetailTab=\'detail\';render()">'+avt(sp.name||'',50)+'<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><strong style="font-size:15px">'+e(sp.name||'')+'</strong>'+tag(rd?'&#10003; Rubric Complete':'Rubric Pending',rd?'tag-green':'tag-amber')+'</div><p style="font-size:12px;color:var(--textMu);margin:3px 0 10px">'+e(st.site||'')+(st.cohort?' &middot; '+e(st.cohort):'')+'</p><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px"><span style="color:var(--textMu)">'+total.toFixed(1)+' / '+st.required_hours+' hours logged</span><span style="font-weight:700;color:'+sColor(p)+'">'+p+'%</span></div>'+pb(total,st.required_hours,sColor(p))+'</div><span style="font-size:18px;color:var(--textMu)">&rsaquo;</span></div>';
+    }).join(''));
+}
+
+function renderSupDetail(st,sp){
+  var hrs=S.supHours[st.id]||[];
+  var total=sumH(hrs);var p=pct(total,st.required_hours);
+  return '<div class="card" style="display:flex;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap">'+avt(sp.name||'',56)+'<div style="flex:1"><h2 style="font-size:20px;font-weight:700">'+e(sp.name||'')+'</h2><p style="font-size:13px;color:var(--textMu)">'+e(sp.email||'')+(st.site?' &middot; '+e(st.site):'')+'</p><div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px"><span style="color:var(--textMu)">Hours Progress</span><span style="font-weight:700;color:'+sColor(p)+'">'+total.toFixed(1)+' / '+st.required_hours+' hrs ('+p+'%)</span></div>'+pb(total,st.required_hours,sColor(p))+'</div></div>'+tag(S.supRubrics[st.id]?'&#10003; Rubric Complete':'Rubric Pending',S.supRubrics[st.id]?'tag-green':'tag-amber')+'</div>'
+  +'<div class="card" style="margin-bottom:18px"><div class="section-title" style="font-size:15px">Hours by Activity Type</div>'+actBar(hrs)+'</div>'
+  +'<div class="card"><div class="section-title" style="font-size:15px">Hours Log</div>'+(hrs.length===0?'<p style="color:var(--textMu);font-size:13px">No entries logged yet.</p>':'<div style="overflow-x:auto"><table><thead><tr><th>Date</th><th>Hrs</th><th>Activity</th><th>Notes</th></tr></thead><tbody>'+hrs.map(function(h){return '<tr><td style="color:var(--textM);white-space:nowrap">'+fmt(h.date)+'</td><td style="font-weight:700">'+parseFloat(h.duration)+'h</td><td>'+e(h.activity)+'</td><td style="color:var(--textMu);max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+e(h.notes)+'">'+e(h.notes||'—')+'</td></tr>';}).join('')+'</tbody></table></div>')+'</div>';
+}
+
+function renderRubricForm(st,sp){
+  var rs=getSupRubricState(st.id);
+  var ex=S.supRubrics[st.id];
+  return '<div class="card" style="margin-bottom:18px"><div class="section-title" style="font-size:20px">Semester Evaluation Rubric</div><p style="color:var(--textMu);font-size:13px">NASP Practice Domains &middot; '+e(sp.name||'')+' &middot; '+e(st.cohort||'')+'</p>'+(ex?'<div style="margin-top:10px;padding:9px 14px;background:var(--greenBg);border-radius:8px;color:var(--green);font-size:13px;font-weight:500;display:inline-block">&#10003; Previously submitted '+fmt(ex.completed_date)+' &mdash; you may update below.</div>':'')+'</div>'
+  +NASP.map(function(d){var r=rs.ratings[d.id]||0;return '<div class="domain-card"><div style="display:flex;gap:12px;align-items:flex-start"><div style="width:26px;height:26px;border-radius:7px;background:#EEF2FA;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--textMu)">'+d.id+'</div><div><div style="font-size:14px;font-weight:700">'+e(d.name)+'</div><div style="font-size:12px;color:var(--textMu);margin-top:3px;line-height:1.5">'+e(d.desc)+'</div></div></div><div style="margin-top:12px;display:flex;flex-wrap:wrap">'+[1,2,3,4,5].map(function(rv){return '<button class="rating-btn" data-did="'+d.id+'" data-r="'+rv+'" onclick="setRating(\''+st.id+'\','+d.id+','+rv+')" style="border-color:'+(r===rv?RC[rv]:'var(--border)')+'">'+rv+' &mdash; '+RATING_LABELS[rv]+'</button>';}).join('')+'</div><div style="margin-top:10px"><label class="fld-label">Comment (optional)</label><textarea class="fld" rows="2" oninput="saveRubricComment(\''+st.id+'\','+d.id+',this.value)">'+e(rs.comments[d.id]||'')+'</textarea></div></div>';}).join('')
+  +'<div class="card"><div style="font-size:15px;font-weight:700;margin-bottom:8px">Overall Narrative Summary</div><p style="font-size:13px;color:var(--textMu);margin-bottom:12px">Provide a holistic summary of performance, professional growth, and recommendations.</p><textarea id="r-narrative" class="fld" rows="5" oninput="saveRubricNarrative(\''+st.id+'\',this.value)">'+e(rs.narrative||'')+'</textarea><div style="margin-top:16px;display:flex;align-items:center;gap:14px"><button class="btn btn-gold" onclick="submitRubric(\''+st.id+'\')">'+(S.loading?'<span class="spin"></span> Saving...':(ex?'Update Rubric':'Submit Rubric'))+'</button><span style="font-size:12px;color:var(--textMu)">All 10 domains must be rated.</span></div></div>';
+}
+
+// ── ADMIN PORTAL ──────────────────────────────────────────────
+function renderAdmin(){
+  return '<div class="tabs"><button class="tab-btn'+(S.adminTab==='overview'?' active':'')+'" onclick="S.adminTab=\'overview\';render()">Program Overview</button><button class="tab-btn'+(S.adminTab==='students'?' active':'')+'" onclick="S.adminTab=\'students\';render()">All Students</button><button class="tab-btn'+(S.adminTab==='users'?' active':'')+'" onclick="S.adminTab=\'users\';render()">User Management</button></div>'
+  +(S.adminTab==='overview'?renderAdminOverview():S.adminTab==='students'?renderAdminStudents():renderAdminUsers());
+}
+
+function renderAdminOverview(){
+  var students=S.allStudents;
+  var totalHrs=sumH(S.allHours);
+  var rn=S.allRubrics.length;
+  var supProfiles=S.allProfiles.filter(function(p){return p.role==='supervisor';});
+  return '<div class="g4" style="margin-bottom:20px">'+[{l:'Enrolled Students',v:students.length},{l:'Site Supervisors',v:supProfiles.length},{l:'Total Hours Logged',v:totalHrs.toFixed(1)},{l:'Rubrics Complete',v:rn+' / '+students.length}].map(function(x){return '<div class="stat-card"><div class="stat-num">'+x.v+'</div><div class="stat-lbl">'+x.l+'</div></div>';}).join('')+'</div>'
+  +'<div class="g2"><div class="card"><div class="section-title" style="font-size:15px">Program-Wide Hours by Activity</div>'+actBar(S.allHours)+'</div>'
+  +'<div class="card"><div class="section-title" style="font-size:15px">Student Progress</div>'+(students.length===0?'<p style="color:var(--textMu);font-size:13px">No students enrolled yet.</p>':students.map(function(st){var prof=S.allProfiles.find(function(p){return p.id===st.profile_id;})||{};var hrs=S.allHours.filter(function(h){return h.student_id===st.id;}).reduce(function(s,h){return s+parseFloat(h.duration);},0);var p=pct(hrs,st.required_hours);return '<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span style="font-weight:600">'+e(prof.name||'')+'</span><span style="color:'+sColor(p)+';font-weight:700">'+hrs.toFixed(1)+'h ('+p+'%)</span></div>'+pb(hrs,st.required_hours,sColor(p))+'</div>';}).join(''))+'</div></div>'
+  +'<div style="margin-top:16px;display:flex;gap:10px"><button class="btn btn-outline" onclick="exportCSV()">&#x2B73; Export Students CSV</button><button class="btn btn-outline" onclick="exportHoursCSV()">&#x2B73; Export Hours CSV</button></div>';
+}
+
+function renderAdminStudents(){
+  if(S.allStudents.length===0) return '<div class="card"><p style="color:var(--textMu)">No student accounts configured yet. Add students in the User Management tab.</p></div>';
+  return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px"><div class="section-title" style="margin-bottom:0">All Enrolled Students</div><button class="btn btn-outline btn-sm" onclick="exportCSV()">&#x2B73; Export CSV</button></div><div style="overflow-x:auto"><table><thead><tr><th>Student</th><th>Placement Site</th><th>Cohort</th><th>Supervisor</th><th>Req Hrs</th><th>Logged</th><th>Progress</th><th>Rubric</th><th></th></tr></thead><tbody>'
+  +S.allStudents.map(function(st){
+    var prof=S.allProfiles.find(function(p){return p.id===st.profile_id;})||{};
+    var sup=S.allProfiles.find(function(p){return p.id===st.supervisor_profile_id;})||{};
+    var hrs=S.allHours.filter(function(h){return h.student_id===st.id;}).reduce(function(s,h){return s+parseFloat(h.duration);},0);
+    var p=pct(hrs,st.required_hours);var rb=S.allRubrics.find(function(r){return r.student_id===st.id;});
+    var supOptions=S.allProfiles.filter(function(p){return p.role==='supervisor';}).map(function(sv){return '<option value="'+sv.id+'"'+(st.supervisor_profile_id===sv.id?' selected':'')+'>'+e(sv.name)+'</option>';}).join('');
+    if(S.adminEditId===st.id){
+      return '<tr><td colspan="9"><div style="background:#F8F9FF;border-radius:8px;padding:16px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;align-items:end"><div><label class="fld-label">Name</label><input class="fld" value="'+e(prof.name||'')+'" disabled style="opacity:.6"></div><div><label class="fld-label">Site</label><input class="fld" id="es-site-'+st.id+'" value="'+e(st.site||'')+'"></div><div><label class="fld-label">Cohort</label><input class="fld" id="es-cohort-'+st.id+'" value="'+e(st.cohort||'')+'"></div><div><label class="fld-label">Required Hours</label><input class="fld" id="es-reqs-'+st.id+'" type="number" value="'+st.required_hours+'"></div><div><label class="fld-label">Supervisor</label><select class="fld" id="es-sup-'+st.id+'"><option value="">None</option>'+supOptions+'</select></div><div style="display:flex;gap:8px"><button class="btn btn-navy btn-sm" onclick="adminSaveStudent(\''+st.id+'\')">Save</button><button class="btn btn-outline btn-sm" onclick="S.adminEditId=null;render()">Cancel</button></div></div></td></tr>';
+    }
+    return '<tr><td><div style="display:flex;align-items:center;gap:8px">'+avt(prof.name||'',32)+'<div><div style="font-weight:600">'+e(prof.name||'')+'</div><div style="font-size:11px;color:var(--textMu)">'+e(prof.email||'')+'</div></div></div></td><td style="color:var(--textM)">'+e(st.site||'')+'</td><td style="color:var(--textM)">'+e(st.cohort||'')+'</td><td style="color:var(--textM)">'+e(sup.name||'—')+'</td><td style="font-weight:600">'+st.required_hours+'</td><td style="font-weight:600">'+hrs.toFixed(1)+'h</td><td style="min-width:110px">'+pb(hrs,st.required_hours,sColor(p))+'<span style="font-size:11px;color:'+sColor(p)+';font-weight:700">'+p+'%</span></td><td>'+tag(rb?'Complete':'Pending',rb?'tag-green':'tag-amber')+'</td><td><button class="btn btn-outline btn-sm" onclick="S.adminEditId=\''+st.id+'\';render()">Edit</button></td></tr>';
+  }).join('')+'</tbody></table></div></div>';
+}
+
+function renderAdminUsers(){
+  var pending=S.allProfiles.filter(function(p){return !p.role;});
+  var supervisorProfiles=S.allProfiles.filter(function(p){return p.role==='supervisor';});
+  var supOptions=supervisorProfiles.map(function(sv){return '<option value="'+sv.id+'">'+e(sv.name)+'</option>';}).join('');
+
+  return '<div>'
+  +'<div class="card" style="margin-bottom:18px;border-left:4px solid var(--navy)"><p style="font-size:13px;line-height:1.7;color:var(--textM)"><strong>How to add a new user:</strong> Go to your <a href="'+SUPABASE_URL.replace('/rest/v1','')+'" target="_blank" style="color:var(--navy)">Supabase Dashboard</a> &rarr; <strong>Authentication &rarr; Users &rarr; Add User</strong>. Enter their email and a temporary password. Then come back here and configure their role below.</p></div>'
+
+  +(pending.length>0?'<div class="card" style="margin-bottom:18px;border-left:4px solid var(--amber)"><div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><span style="font-size:20px">&#9888;</span><div class="section-title" style="margin-bottom:0;font-size:16px">Pending Users ('+pending.length+')</div></div>'
+    +pending.map(function(p){
+      return '<div style="background:#FAFBFE;border-radius:10px;padding:16px;margin-bottom:12px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'+avt(p.name||p.email||'?',36)+'<div><strong>'+(p.name||'(no name yet)')+'</strong><p style="font-size:12px;color:var(--textMu)">'+e(p.email)+'</p></div></div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px"><div><label class="fld-label">Full Name *</label><input class="fld" id="au-name-'+p.id+'" value="'+e(p.name||'')+'" placeholder="First Last"></div><div><label class="fld-label">Role *</label><select class="fld" id="au-role-'+p.id+'" onchange="document.getElementById(\'au-extra-'+p.id+'\').style.display=this.value?\'block\':\'none\';document.getElementById(\'au-student-'+p.id+'\').style.display=this.value===\'student\'?\'block\':\'none\';document.getElementById(\'au-supervisor-'+p.id+'\').style.display=this.value===\'supervisor\'?\'block\':\'none\'"><option value="">Select role...</option><option value="student">Student</option><option value="supervisor">Site Supervisor</option><option value="admin">Admin</option></select></div></div>'
+        +'<div id="au-extra-'+p.id+'" style="display:none"><div id="au-student-'+p.id+'" style="display:none"><div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px"><div><label class="fld-label">Site</label><input class="fld" id="au-site-'+p.id+'" placeholder="School name"></div><div><label class="fld-label">Cohort</label><input class="fld" id="au-cohort-'+p.id+'" placeholder="Spring 2026"></div><div><label class="fld-label">Req. Hours</label><input class="fld" type="number" id="au-reqs-'+p.id+'" value="200"></div><div><label class="fld-label">Supervisor</label><select class="fld" id="au-sup-'+p.id+'"><option value="">None yet</option>'+supOptions+'</select></div></div></div>'
+        +'<div id="au-supervisor-'+p.id+'" style="display:none"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px"><div><label class="fld-label">Title / Credentials</label><input class="fld" id="au-title-'+p.id+'" placeholder="NCSP, School Psychologist"></div><div><label class="fld-label">Organization</label><input class="fld" id="au-org-'+p.id+'" placeholder="County Schools"></div></div></div>'
+        +'</div><button class="btn btn-navy btn-sm" onclick="adminActivateUser(\''+p.id+'\')">Activate Account</button></div>';
+    }).join('')+'</div>':'')
+
+  +'<div class="card" style="margin-bottom:18px"><div class="section-title" style="font-size:16px">Active Users</div><div style="overflow-x:auto"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Details</th><th></th></tr></thead><tbody>'
+  +S.allProfiles.filter(function(p){return !!p.role;}).map(function(p){
+    var sup=S.allSupervisors.find(function(s){return s.profile_id===p.id;});
+    var st=S.allStudents.find(function(s){return s.profile_id===p.id;});
+    var supName=st?S.allProfiles.find(function(x){return x.id===st.supervisor_profile_id;}):{};
+    var detail='';
+    if(p.role==='student'&&st) detail='Site: '+e(st.site||'—')+(supName?' &middot; Sup: '+e(supName.name||'—'):'');
+    if(p.role==='supervisor'&&sup) detail=e(sup.title||'')+(sup.org?' &middot; '+e(sup.org):'');
+    var editContent='';
+    if(S.adminEditId==='prof-'+p.id){
+      if(p.role==='supervisor'&&sup){
+        editContent='<div style="display:flex;gap:10px;align-items:flex-end"><div><label class="fld-label">Title</label><input class="fld" id="es-title-'+sup.id+'" value="'+e(sup.title||'')+'"></div><div><label class="fld-label">Organization</label><input class="fld" id="es-org-'+sup.id+'" value="'+e(sup.org||'')+'"></div><div><button class="btn btn-navy btn-sm" onclick="adminSaveSupervisor(\''+sup.id+'\')">Save</button></div><div><button class="btn btn-outline btn-sm" onclick="S.adminEditId=null;render()">Cancel</button></div></div>';
+      }
+    }
+    return '<tr><td><div style="display:flex;align-items:center;gap:8px">'+avt(p.name,30)+'<span style="font-weight:600">'+e(p.name)+'</span></div></td><td style="color:var(--textMu)">'+e(p.email)+'</td><td>'+tag(p.role,'tag-navy')+'</td><td style="color:var(--textM);font-size:12px">'+detail+'</td><td>'+(p.role==='supervisor'?'<button class="btn btn-outline btn-sm" onclick="S.adminEditId=\''+'prof-'+p.id+'\';render()">Edit</button>':'')+'</td></tr>'+(editContent?'<tr><td colspan="5" style="padding:12px">'+editContent+'</td></tr>':'');
+  }).join('')+'</tbody></table></div></div></div>';
+}
+
+// ── START ─────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
