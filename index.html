@@ -98,7 +98,7 @@ tr:nth-child(even) td{background:#FAFBFE}
 // ══════════════════════════════════════════════════════════════
 var SUPABASE_URL  = 'https://wemaqwbdfntgugiacgsf.supabase.co';
 var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWFxd2JkZm50Z3VnaWFjZ3NmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMTk2NDMsImV4cCI6MjA4OTU5NTY0M30.SwKny4AQ04JcfKgUWUfMDJGSHeJrpII_PYuo6zNJDZw';
-  
+
 var ACTIVITIES = ['Assessment / Evaluation','Consultation','Counseling - Individual','Counseling - Group','Crisis Intervention','Observation','Report Writing','Team Meeting / IEP','Parent / Family Consultation','Professional Development','Supervision','Other'];
 var RC_COLORS = ['','#C0392B','#C67C00','#B45309','#2E7D52','#1C7C54','#0F4C81'];
 var PROG_ICONS = {'school-psych':'&#x1F4DA;','counseling':'&#x1F9E0;'};
@@ -260,6 +260,9 @@ async function loadSuperAdminData(){
 // ── AUTH ──────────────────────────────────────────────────────
 async function init(){
   if(!db){render();return;}
+  // Load programs publicly so registration form can show them
+  var progRes=await db.from('programs').select('*').eq('active',true).order('name');
+  S.programs=progRes.data||[];
   var res=await db.auth.getSession();
   if(res.data.session) await loadUserData(res.data.session.user.id);
   else S.screen='auth';
@@ -288,11 +291,22 @@ async function doRegister(){
   var email=document.getElementById('r-email').value.trim();
   var pass=document.getElementById('r-pass').value;
   var pass2=document.getElementById('r-pass2').value;
-  if(!name||!email||!pass){S.err='All fields are required.';render();return;}
+  var role=document.getElementById('r-role').value;
+  var progId=document.getElementById('r-prog').value;
+  if(!name||!email||!pass||!role||!progId){S.err='All fields are required.';render();return;}
   if(pass!==pass2){S.err='Passwords do not match.';render();return;}
   if(pass.length<8){S.err='Password must be at least 8 characters.';render();return;}
+  // Collect role-specific fields
+  var meta={name:name,requested_role:role,requested_program_id:progId};
+  if(role==='student'){
+    meta.requested_site=document.getElementById('r-site').value.trim();
+    meta.requested_cohort=document.getElementById('r-cohort').value.trim();
+  } else if(role==='supervisor'){
+    meta.requested_title=document.getElementById('r-title').value.trim();
+    meta.requested_org=document.getElementById('r-org').value.trim();
+  }
   S.loading=true;render();
-  var res=await db.auth.signUp({email:email,password:pass,options:{data:{name:name}}});
+  var res=await db.auth.signUp({email:email,password:pass,options:{data:meta}});
   S.loading=false;
   if(res.error){S.err=res.error.message;render();return;}
   S.screen='pending';S.profile={name:name,email:email,role:null};render();
@@ -479,6 +493,7 @@ async function superActivateUser(profileId){
   var name=document.getElementById('su-name-'+profileId).value.trim();
   var progId=document.getElementById('su-prog-'+profileId).value;
   if(!role||!name||!progId){alert('Name, role, and program are all required.');return;}
+  // If name field was pre-filled from metadata, also update the profile name
   S.loading=true;render();
   await db.from('profiles').update({role:role,name:name,program_id:progId}).eq('id',profileId);
   if(role==='student'){
@@ -545,8 +560,50 @@ function msgHtml(){
 }
 
 // ── AUTH ──────────────────────────────────────────────────────
+function renderRegisterForm(){
+  var progOpts=S.programs.map(function(p){return '<option value="'+p.id+'">'+e(p.name)+'</option>';}).join('');
+  var roleEl=document.getElementById('r-role');
+  var currentRole=roleEl?roleEl.value:'';
+  return '<div>'
+    +'<div class="g2" style="margin-bottom:14px">'
+      +'<div><label class="fld-label">Full Name *</label><input class="fld" id="r-name" type="text" placeholder="First Last"></div>'
+      +'<div><label class="fld-label">Email *</label><input class="fld" id="r-email" type="email" placeholder="your@georgiasouthern.edu"></div>'
+    +'</div>'
+    +'<div class="g2" style="margin-bottom:14px">'
+      +'<div><label class="fld-label">Program *</label>'
+        +'<select class="fld" id="r-prog"><option value="">Select program...</option>'+progOpts+'</select>'
+      +'</div>'
+      +'<div><label class="fld-label">I am a... *</label>'
+        +'<select class="fld" id="r-role" onchange="render()">'
+          +'<option value="">Select role...</option>'
+          +'<option value="student">Practicum Student</option>'
+          +'<option value="supervisor">Site Supervisor</option>'
+        +'</select>'
+      +'</div>'
+    +'</div>'
+    // Student fields
+    +(currentRole==='student'?
+      '<div class="g2" style="margin-bottom:14px">'
+        +'<div><label class="fld-label">Placement Site</label><input class="fld" id="r-site" placeholder="e.g. Savannah Elementary School"></div>'
+        +'<div><label class="fld-label">Cohort</label><input class="fld" id="r-cohort" placeholder="e.g. Spring 2026"></div>'
+      +'</div>'
+    :currentRole==='supervisor'?
+      '<div class="g2" style="margin-bottom:14px">'
+        +'<div><label class="fld-label">Title / Credentials</label><input class="fld" id="r-title" placeholder="e.g. NCSP, School Psychologist"></div>'
+        +'<div><label class="fld-label">Organization</label><input class="fld" id="r-org" placeholder="e.g. Chatham County Schools"></div>'
+      +'</div>'
+    :'')
+    +'<div class="g2" style="margin-bottom:20px">'
+      +'<div><label class="fld-label">Password *</label><input class="fld" id="r-pass" type="password" placeholder="At least 8 characters"></div>'
+      +'<div><label class="fld-label">Confirm Password *</label><input class="fld" id="r-pass2" type="password" placeholder="Repeat password"></div>'
+    +'</div>'
+    +'<button class="btn btn-navy" style="width:100%" onclick="doRegister()">'+(S.loading?'<span class="spin"></span>':'Create Account')+'</button>'
+    +'<p style="font-size:12px;color:var(--textMu);margin-top:14px;text-align:center;line-height:1.6">After registering, a program administrator will review and activate your account before you can log in.</p>'
+  +'</div>';
+}
+
 function renderAuth(){
-  return '<div class="auth-wrap"><div class="auth-card"><div class="auth-logo"><div class="auth-logo-icon">&#x1F985;</div><div><strong style="font-size:16px;color:var(--navy)">Practicum Portal</strong><p style="font-size:11px;color:var(--textMu)">Georgia Southern University</p></div></div>'+(S.err?'<div class="msg-err">'+e(S.err)+'</div>':'')+'<div class="auth-tabs"><button class="auth-tab'+(S.authTab==='login'?' active':'')+'" onclick="S.authTab=\'login\';S.err=null;render()">Sign In</button><button class="auth-tab'+(S.authTab==='register'?' active':'')+'" onclick="S.authTab=\'register\';S.err=null;render()">Register</button></div>'+(S.authTab==='login'?'<div><label class="fld-label">Email</label><input class="fld" id="a-email" type="email" placeholder="your@georgiasouthern.edu" style="margin-bottom:14px"><label class="fld-label">Password</label><input class="fld" id="a-pass" type="password" placeholder="Password" style="margin-bottom:22px" onkeydown="if(event.key===\'Enter\')doSignIn()"><button class="btn btn-navy" style="width:100%" onclick="doSignIn()">'+(S.loading?'<span class="spin"></span>':'Sign In')+'</button></div>':'<div><label class="fld-label">Full Name</label><input class="fld" id="r-name" type="text" placeholder="First Last" style="margin-bottom:14px"><label class="fld-label">Email</label><input class="fld" id="r-email" type="email" style="margin-bottom:14px"><label class="fld-label">Password</label><input class="fld" id="r-pass" type="password" style="margin-bottom:14px"><label class="fld-label">Confirm Password</label><input class="fld" id="r-pass2" type="password" style="margin-bottom:22px"><button class="btn btn-navy" style="width:100%" onclick="doRegister()">'+(S.loading?'<span class="spin"></span>':'Create Account')+'</button><p style="font-size:12px;color:var(--textMu);margin-top:14px;text-align:center">An admin will activate your account.</p></div>')+'</div></div>';
+  return '<div class="auth-wrap"><div class="auth-card"><div class="auth-logo"><div class="auth-logo-icon">&#x1F985;</div><div><strong style="font-size:16px;color:var(--navy)">Practicum Portal</strong><p style="font-size:11px;color:var(--textMu)">Georgia Southern University</p></div></div>'+(S.err?'<div class="msg-err">'+e(S.err)+'</div>':'')+'<div class="auth-tabs"><button class="auth-tab'+(S.authTab==='login'?' active':'')+'" onclick="S.authTab=\'login\';S.err=null;render()">Sign In</button><button class="auth-tab'+(S.authTab==='register'?' active':'')+'" onclick="S.authTab=\'register\';S.err=null;render()">Register</button></div>'+(S.authTab==='login'?'<div><label class="fld-label">Email</label><input class="fld" id="a-email" type="email" placeholder="your@georgiasouthern.edu" style="margin-bottom:14px"><label class="fld-label">Password</label><input class="fld" id="a-pass" type="password" placeholder="Password" style="margin-bottom:22px" onkeydown="if(event.key===\'Enter\')doSignIn()"><button class="btn btn-navy" style="width:100%" onclick="doSignIn()">'+(S.loading?'<span class="spin"></span>':'Sign In')+'</button></div>':'<div>'+renderRegisterForm()+'</div>')+'</div></div>';
 }
 
 function renderPending(){
@@ -742,41 +799,56 @@ function renderSuperUsers(){
   return '<div>'
   +(pending.length?'<div class="card" style="margin-bottom:18px;border-left:4px solid var(--amber)"><div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><span style="font-size:20px">&#9888;</span><div class="section-title" style="margin-bottom:0;font-size:16px">Pending Activation ('+pending.length+')</div></div>'
     +pending.map(function(p){
+      var meta=p.raw_user_meta_data||{};
+      var preRole=meta.requested_role||'';
+      var preProgId=meta.requested_program_id||'';
+      var preSite=meta.requested_site||'';
+      var preCohort=meta.requested_cohort||'';
+      var preTitle=meta.requested_title||'';
+      var preOrg=meta.requested_org||'';
+      var hasMeta=!!preRole;
+      var progOptsP=S.programs.map(function(pg){return '<option value="'+pg.id+'"'+(pg.id===preProgId?' selected':'')+'>'+e(pg.name)+'</option>';}).join('');
+      var showExtra=preRole==='student'||preRole==='supervisor';
       return '<div style="background:#FAFBFE;border-radius:10px;padding:16px;margin-bottom:12px">'
-        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'+avt(p.name||'?',36)+'<div><strong>'+(p.name||'(no name)')+'</strong><p style="font-size:12px;color:var(--textMu)">'+e(p.email)+'</p></div></div>'
+        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'
+          +avt(p.name||'?',36)
+          +'<div style="flex:1"><strong>'+(p.name||'(no name)')+'</strong><p style="font-size:12px;color:var(--textMu)">'+e(p.email)+'</p></div>'
+          +(hasMeta?'<span style="font-size:11px;background:var(--greenBg);color:var(--green);padding:3px 10px;border-radius:99px;font-weight:700">Self-registered</span>':'')
+        +'</div>'
         +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">'
           +'<div><label class="fld-label">Full Name *</label><input class="fld" id="su-name-'+p.id+'" value="'+e(p.name||'')+'" placeholder="First Last"></div>'
-          +'<div><label class="fld-label">Program *</label><select class="fld" id="su-prog-'+p.id+'"><option value="">Select program...</option>'+progOpts+'</select></div>'
+          +'<div><label class="fld-label">Program *</label><select class="fld" id="su-prog-'+p.id+'"><option value="">Select program...</option>'+progOptsP+'</select></div>'
           +'<div><label class="fld-label">Role *</label><select class="fld" id="su-role-'+p.id+'" onchange="'
             +'document.getElementById(\'su-extra-'+p.id+'\').style.display=this.value&&this.value!==\'admin\'?\'block\':\'none\';'
             +'document.getElementById(\'su-student-'+p.id+'\').style.display=this.value===\'student\'?\'block\':\'none\';'
             +'document.getElementById(\'su-supervisor-'+p.id+'\').style.display=this.value===\'supervisor\'?\'block\':\'none\''
             +'">'
             +'<option value="">Select role...</option>'
-            +'<option value="student">Student</option>'
-            +'<option value="supervisor">Site Supervisor</option>'
-            +'<option value="admin">Program Admin</option>'
+            +'<option value="student"'+(preRole==='student'?' selected':'')+'>Student</option>'
+            +'<option value="supervisor"'+(preRole==='supervisor'?' selected':'')+'>Site Supervisor</option>'
+            +'<option value="admin"'+(preRole==='admin'?' selected':'')+'>Program Admin</option>'
           +'</select></div>'
         +'</div>'
-        +'<div id="su-extra-'+p.id+'" style="display:none">'
-          +'<div id="su-student-'+p.id+'" style="display:none">'
+        +'<div id="su-extra-'+p.id+'" style="display:'+(showExtra?'block':'none')+'">'
+          +'<div id="su-student-'+p.id+'" style="display:'+(preRole==='student'?'block':'none')+'">'
             +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px">'
-              +'<div><label class="fld-label">Site</label><input class="fld" id="su-site-'+p.id+'" placeholder="School name"></div>'
-              +'<div><label class="fld-label">Cohort</label><input class="fld" id="su-cohort-'+p.id+'" placeholder="Spring 2026"></div>'
+              +'<div><label class="fld-label">Site</label><input class="fld" id="su-site-'+p.id+'" value="'+e(preSite)+'" placeholder="School name"></div>'
+              +'<div><label class="fld-label">Cohort</label><input class="fld" id="su-cohort-'+p.id+'" value="'+e(preCohort)+'" placeholder="Spring 2026"></div>'
               +'<div><label class="fld-label">Req. Hours</label><input class="fld" type="number" id="su-reqs-'+p.id+'" value="200"></div>'
               +'<div><label class="fld-label">Supervisor</label><select class="fld" id="su-sup-'+p.id+'"><option value="">None yet</option>'+allSupOpts+'</select></div>'
             +'</div>'
           +'</div>'
-          +'<div id="su-supervisor-'+p.id+'" style="display:none">'
+          +'<div id="su-supervisor-'+p.id+'" style="display:'+(preRole==='supervisor'?'block':'none')+'">'
             +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
-              +'<div><label class="fld-label">Title / Credentials</label><input class="fld" id="su-title-'+p.id+'" placeholder="e.g. LPC, NCSP"></div>'
-              +'<div><label class="fld-label">Organization</label><input class="fld" id="su-org-'+p.id+'" placeholder="County Schools"></div>'
+              +'<div><label class="fld-label">Title / Credentials</label><input class="fld" id="su-title-'+p.id+'" value="'+e(preTitle)+'" placeholder="e.g. LPC, NCSP"></div>'
+              +'<div><label class="fld-label">Organization</label><input class="fld" id="su-org-'+p.id+'" value="'+e(preOrg)+'" placeholder="County Schools"></div>'
             +'</div>'
           +'</div>'
         +'</div>'
-        +'<button class="btn btn-navy btn-sm" onclick="superActivateUser(\''+p.id+'\')">Activate Account</button>'
+        +'<button class="btn btn-navy btn-sm" onclick="superActivateUser(\''+p.id+'\')"><span>'+(hasMeta?'&#10003; Confirm & Activate':'Activate Account')+'</span></button>'
       +'</div>';
     }).join('')
+
     +'</div>':'')
   +'<div class="card"><div class="section-title" style="font-size:16px">All Active Users</div><div style="overflow-x:auto"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Program</th></tr></thead><tbody>'
   +active.map(function(p){
