@@ -121,6 +121,7 @@ var S = {
   adminEditId:null, rubricEditId:null,
   // super admin
   superTab:'programs', superAdminViewProgramId:null,
+  adminViewStudentId:null,
   // ui
   loading:false, msg:null, err:null, authTab:'login'
 };
@@ -265,7 +266,7 @@ async function init(){
   render();
   db.auth.onAuthStateChange(async function(event){
     if(event==='SIGNED_OUT'){
-      Object.assign(S,{screen:'auth',profile:null,msg:null,err:null,authTab:'login',programs:[],currentProgramId:null,rubricDomains:[],ratingLabels:[],studentTab:'dashboard',supSelected:null,supDetailTab:'detail',supRubricState:{},adminTab:'overview',allProfiles:[],allStudents:[],allSupervisors:[],allHours:[],allRubrics:[],adminEditId:null,rubricEditId:null,superTab:'programs',superAdminViewProgramId:null,loading:false,studentRec:null,supProfile:null,hours:[],rubric:null,supStudents:[],supStudentProfiles:{},supHours:{},supRubrics:{}});
+      Object.assign(S,{screen:'auth',profile:null,msg:null,err:null,authTab:'login',programs:[],currentProgramId:null,rubricDomains:[],ratingLabels:[],studentTab:'dashboard',supSelected:null,supDetailTab:'detail',supRubricState:{},adminTab:'overview',allProfiles:[],allStudents:[],allSupervisors:[],allHours:[],allRubrics:[],adminEditId:null,rubricEditId:null,adminViewStudentId:null,superTab:'programs',superAdminViewProgramId:null,loading:false,studentRec:null,supProfile:null,hours:[],rubric:null,supStudents:[],supStudentProfiles:{},supHours:{},supRubrics:{}});
       render();
     }
   });
@@ -552,10 +553,44 @@ function renderPending(){
   return '<div style="max-width:500px;margin:60px auto"><div class="card" style="text-align:center;padding:40px"><div style="font-size:40px;margin-bottom:16px">&#x23F3;</div><h2 style="font-size:22px;font-weight:700;margin-bottom:10px">Account Pending Activation</h2><p style="color:var(--textMu);font-size:14px;line-height:1.7;margin-bottom:24px">Your account has been created. A program administrator needs to assign your role before you can access the portal.</p><button class="btn btn-outline" onclick="doSignOut()">Sign Out</button></div></div>';
 }
 
+// ── RUBRIC READ-ONLY VIEW (shared by student + admin) ────────
+function renderRubricReadOnly(rubric, domains, ratingLabels, submitterName){
+  if(!rubric) return '<div class="card"><p style="color:var(--textMu);font-size:13px">No rubric submitted yet.</p></div>';
+  var rc=ratingLabels.length-1;
+  var RC=['','#C0392B','#C67C00','#B45309','#2E7D52','#1C7C54','#0F4C81'];
+  var avgRating=0;var rated=0;
+  domains.forEach(function(d){var r=rubric.ratings&&rubric.ratings[d.id]||0;if(r>0){avgRating+=r;rated++;}});
+  var avg=rated?( avgRating/rated).toFixed(1):'-';
+  return '<div class="card" style="margin-bottom:18px;border-left:4px solid var(--green)">'
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">'
+    +'<div><div class="section-title" style="font-size:18px;margin-bottom:4px">Semester Evaluation Rubric</div>'
+    +'<p style="font-size:13px;color:var(--textMu)">Submitted by '+e(submitterName||'supervisor')+' &middot; '+fmt(rubric.completed_date)+'</p></div>'
+    +'<div style="text-align:right"><div style="font-size:28px;font-weight:700;color:var(--green)">'+avg+'</div><div style="font-size:11px;color:var(--textMu)">avg rating / '+rc+'</div></div>'
+    +'</div></div>'
+  +domains.map(function(d){
+    var r=rubric.ratings&&rubric.ratings[d.id]||0;
+    var comment=rubric.comments&&rubric.comments[d.id]||'';
+    var c=RC[r]||'var(--border)';
+    return '<div class="domain-card">'
+      +'<div style="display:flex;gap:12px;align-items:flex-start">'
+      +'<div style="width:26px;height:26px;border-radius:7px;background:#EEF2FA;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--textMu)">'+d.order_num+'</div>'
+      +'<div style="flex:1">'
+      +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">'
+      +'<strong style="font-size:14px">'+e(d.name)+'</strong>'
+      +(r>0?'<span style="background:'+c+'20;color:'+c+';border:2px solid '+c+';border-radius:8px;padding:3px 12px;font-size:12px;font-weight:700">'+r+' &mdash; '+(ratingLabels[r]||'Level '+r)+'</span>':'<span style="color:var(--textMu);font-size:12px">Not rated</span>')
+      +'</div>'
+      +'<p style="font-size:12px;color:var(--textMu);line-height:1.5;margin-bottom:'+(comment?'8':'0')+'px">'+e(d.description)+'</p>'
+      +(comment?'<p style="font-size:13px;color:var(--textM);background:#F8F9FF;border-radius:6px;padding:8px 12px;border-left:3px solid var(--border)">'+e(comment)+'</p>':'')
+      +'</div></div></div>';
+  }).join('')
+  +(rubric.narrative?'<div class="card" style="margin-top:0"><div style="font-size:14px;font-weight:700;margin-bottom:8px">Overall Narrative Summary</div><p style="font-size:13px;line-height:1.7;color:var(--textM)">'+e(rubric.narrative)+'</p></div>':'');
+}
+
 // ── STUDENT (unchanged from v3) ───────────────────────────────
 function renderStudent(){
   var req=S.studentRec?S.studentRec.required_hours:200;
-  return '<div class="tabs"><button class="tab-btn'+(S.studentTab==='dashboard'?' active':'')+'" onclick="S.studentTab=\'dashboard\';render()">Dashboard</button><button class="tab-btn'+(S.studentTab==='log'?' active':'')+'" onclick="S.studentTab=\'log\';render()">Log Hours</button><button class="tab-btn'+(S.studentTab==='history'?' active':'')+'" onclick="S.studentTab=\'history\';render()">History</button></div>'+(!S.studentRec?'<div class="card"><p style="color:var(--textMu)">Your student record is being set up. Check back soon.</p></div>':S.studentTab==='dashboard'?renderStudentDash(req):S.studentTab==='log'?renderLogForm():renderHoursHistory());
+  var rubricTab=S.rubric?'<button class="tab-btn'+(S.studentTab==='rubric'?' active':'')+'" onclick="S.studentTab=\'rubric\';render()">&#10003; My Rubric</button>':'';
+  return '<div class="tabs"><button class="tab-btn'+(S.studentTab==='dashboard'?' active':'')+'" onclick="S.studentTab=\'dashboard\';render()">Dashboard</button><button class="tab-btn'+(S.studentTab==='log'?' active':'')+'" onclick="S.studentTab=\'log\';render()">Log Hours</button><button class="tab-btn'+(S.studentTab==='history'?' active':'')+'" onclick="S.studentTab=\'history\';render()">History</button>'+rubricTab+'</div>'+(!S.studentRec?'<div class="card"><p style="color:var(--textMu)">Your student record is being set up. Check back soon.</p></div>':S.studentTab==='dashboard'?renderStudentDash(req):S.studentTab==='log'?renderLogForm():S.studentTab==='history'?renderHoursHistory():renderRubricReadOnly(S.rubric,S.rubricDomains,S.ratingLabels,S.supProfile?S.supProfile.name:''));
 }
 function renderStudentDash(req){
   var total=sumH(S.hours);var p=pct(total,req);var recent=S.hours.slice(0,4);
@@ -612,6 +647,16 @@ function renderAdminOverview(){
 
 function renderAdminStudents(){
   if(!S.allStudents.length) return '<div class="card"><p style="color:var(--textMu)">No students yet.</p></div>';
+  // Rubric detail view
+  if(S.adminViewStudentId){
+    var st=S.allStudents.find(function(x){return x.id===S.adminViewStudentId;});
+    var prof=S.allProfiles.find(function(p){return p.id===st.profile_id;})||{};
+    var sup=S.allProfiles.find(function(p){return p.id===st.supervisor_profile_id;})||{};
+    var rb=S.allRubrics.find(function(r){return r.student_id===st.id;});
+    return '<button class="btn btn-outline btn-sm" style="margin-bottom:18px" onclick="S.adminViewStudentId=null;render()">&#8592; Back to Students</button>'
+      +'<div class="card" style="display:flex;align-items:center;gap:14px;margin-bottom:18px">'+avt(prof.name||'',44)+'<div><h3 style="font-size:17px;font-weight:700">'+e(prof.name||'')+'</h3><p style="font-size:13px;color:var(--textMu)">'+e(st.site||'')+' &middot; '+e(st.cohort||'')+' &middot; Supervisor: '+e(sup.name||'—')+'</p></div></div>'
+      +renderRubricReadOnly(rb,S.rubricDomains,S.ratingLabels,sup.name);
+  }
   var supOpts=S.allProfiles.filter(function(p){return p.role==='supervisor';}).map(function(sv){return '<option value="'+sv.id+'">'+e(sv.name)+'</option>';}).join('');
   return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px"><div class="section-title" style="margin-bottom:0">Enrolled Students</div><button class="btn btn-outline btn-sm" onclick="exportCSV()">&#x2B73; Export CSV</button></div><div style="overflow-x:auto"><table><thead><tr><th>Student</th><th>Site</th><th>Cohort</th><th>Supervisor</th><th>Req</th><th>Logged</th><th>Progress</th><th>Rubric</th><th></th></tr></thead><tbody>'
   +S.allStudents.map(function(st){
@@ -622,7 +667,7 @@ function renderAdminStudents(){
     if(S.adminEditId===st.id){
       return '<tr><td colspan="9"><div style="background:#F8F9FF;border-radius:8px;padding:16px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;align-items:end"><div><label class="fld-label">Site</label><input class="fld" id="es-site-'+st.id+'" value="'+e(st.site||'')+'"></div><div><label class="fld-label">Cohort</label><input class="fld" id="es-cohort-'+st.id+'" value="'+e(st.cohort||'')+'"></div><div><label class="fld-label">Required Hours</label><input class="fld" id="es-reqs-'+st.id+'" type="number" value="'+st.required_hours+'"></div><div><label class="fld-label">Supervisor</label><select class="fld" id="es-sup-'+st.id+'"><option value="">None</option>'+supOpts+'</select></div><div style="display:flex;gap:8px"><button class="btn btn-navy btn-sm" onclick="adminSaveStudent(\''+st.id+'\')">Save</button><button class="btn btn-outline btn-sm" onclick="S.adminEditId=null;render()">Cancel</button></div></div></td></tr>';
     }
-    return '<tr><td><div style="display:flex;align-items:center;gap:8px">'+avt(prof.name||'',32)+'<div><div style="font-weight:600">'+e(prof.name||'')+'</div><div style="font-size:11px;color:var(--textMu)">'+e(prof.email||'')+'</div></div></div></td><td>'+e(st.site||'')+'</td><td>'+e(st.cohort||'')+'</td><td>'+e(sup.name||'—')+'</td><td style="font-weight:600">'+st.required_hours+'</td><td style="font-weight:600">'+hrs.toFixed(1)+'h</td><td style="min-width:110px">'+pb(hrs,st.required_hours,sColor(p))+'<span style="font-size:11px;color:'+sColor(p)+';font-weight:700">'+p+'%</span></td><td>'+tag(rb?'Complete':'Pending',rb?'tag-green':'tag-amber')+'</td><td><button class="btn btn-outline btn-sm" onclick="S.adminEditId=\''+st.id+'\';render()">Edit</button></td></tr>';
+    return '<tr><td><div style="display:flex;align-items:center;gap:8px">'+avt(prof.name||'',32)+'<div><div style="font-weight:600">'+e(prof.name||'')+'</div><div style="font-size:11px;color:var(--textMu)">'+e(prof.email||'')+'</div></div></div></td><td>'+e(st.site||'')+'</td><td>'+e(st.cohort||'')+'</td><td>'+e(sup.name||'—')+'</td><td style="font-weight:600">'+st.required_hours+'</td><td style="font-weight:600">'+hrs.toFixed(1)+'h</td><td style="min-width:110px">'+pb(hrs,st.required_hours,sColor(p))+'<span style="font-size:11px;color:'+sColor(p)+';font-weight:700">'+p+'%</span></td><td>'+tag(rb?'Complete':'Pending',rb?'tag-green':'tag-amber')+'</td><td style="white-space:nowrap"><button class="btn btn-outline btn-sm" onclick="S.adminEditId=\''+st.id+'\';render()">Edit</button>'+(rb?' <button class="btn btn-outline btn-sm" style="color:var(--green);border-color:var(--green)" onclick="S.adminViewStudentId=\''+st.id+'\';render()">View Rubric</button>':'')+'</td></tr>';
   }).join('')+'</tbody></table></div></div>';
 }
 
