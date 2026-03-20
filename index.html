@@ -412,30 +412,39 @@ async function saveRatingLabels(){
   await loadRubricConfig(S.currentProgramId);render();
 }
 async function addRatingLevel(){
-  S.loading=true;render();
-  await loadRubricConfig(S.currentProgramId);
-  var labels=S.ratingLabels.slice();
+  // Read current field values from screen
+  var labels=[''];var rc=S.ratingLabels.length-1;
+  for(var i=1;i<=rc;i++){var el=document.getElementById('rl-'+i);labels.push(el?el.value.trim()||S.ratingLabels[i]:S.ratingLabels[i]);}
   labels.push('Level '+labels.length);
   S.ratingLabels=labels;
-  await db.from('rubric_config').update({value:JSON.stringify(labels)}).eq('key','rating_labels').eq('program_id',S.currentProgramId);
+  S.loading=true;
+  var res=await db.from('rubric_config').update({value:JSON.stringify(labels)}).eq('key','rating_labels').eq('program_id',S.currentProgramId);
+  if(res.error){S.loading=false;S.err='Error: '+res.error.message;render();return;}
   S.loading=false;S.msg='Level added!';render();
 }
 async function removeRatingLevel(){
-  S.loading=true;render();
-  await loadRubricConfig(S.currentProgramId);
-  if(S.ratingLabels.length<=3){S.loading=false;alert('Minimum 2 levels required.');render();return;}
-  var labels=S.ratingLabels.slice(0,-1);
+  if(S.ratingLabels.length<=3){alert('Minimum 2 levels required.');return;}
+  // Read current field values from screen
+  var labels=[''];var rc=S.ratingLabels.length-1;
+  for(var i=1;i<=rc;i++){var el=document.getElementById('rl-'+i);labels.push(el?el.value.trim()||S.ratingLabels[i]:S.ratingLabels[i]);}
+  labels=labels.slice(0,-1);
   S.ratingLabels=labels;
-  await db.from('rubric_config').update({value:JSON.stringify(labels)}).eq('key','rating_labels').eq('program_id',S.currentProgramId);
+  S.loading=true;
+  var res=await db.from('rubric_config').update({value:JSON.stringify(labels)}).eq('key','rating_labels').eq('program_id',S.currentProgramId);
+  if(res.error){S.loading=false;S.err='Error: '+res.error.message;render();return;}
   S.loading=false;S.msg='Level removed!';render();
 }
 async function resetRatingLabels(){
   if(!confirm('Reset to default 5 levels (Beginning, Developing, Proficient, Advanced, Distinguished)?')) return;
   var labels=['','Beginning','Developing','Proficient','Advanced','Distinguished'];
-  S.ratingLabels=labels;
   S.loading=true;render();
-  await db.from('rubric_config').update({value:JSON.stringify(labels)}).eq('key','rating_labels').eq('program_id',S.currentProgramId);
-  await loadRubricConfig(S.currentProgramId);
+  var res = await db.from('rubric_config')
+    .update({value:JSON.stringify(labels)})
+    .eq('key','rating_labels')
+    .eq('program_id',S.currentProgramId);
+  if(res.error){S.loading=false;S.err='Reset failed: '+res.error.message;render();return;}
+  // Set directly — do NOT reload from DB which may still cache old value
+  S.ratingLabels=labels;
   S.loading=false;S.msg='Rating scale reset to defaults!';render();
 }
 
