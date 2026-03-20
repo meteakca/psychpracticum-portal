@@ -411,29 +411,32 @@ async function saveRatingLabels(){
   S.loading=false;S.msg='Rating labels updated!';
   await loadRubricConfig(S.currentProgramId);render();
 }
-async function saveRatingLabelsAndThen(newLabels){
-  S.ratingLabels = newLabels;
-  await db.from('rubric_config').update({value:JSON.stringify(newLabels)}).eq('key','rating_labels').eq('program_id',S.currentProgramId);
-  await loadRubricConfig(S.currentProgramId);
-}
 async function addRatingLevel(){
-  // Save current field values first, then append
-  var labels=[''];var rc=ratingCount();
-  for(var i=1;i<=rc;i++){var el=document.getElementById('rl-'+i);labels.push(el?el.value.trim()||S.ratingLabels[i]||('Level '+i):S.ratingLabels[i]||('Level '+i));}
-  labels.push('Level '+labels.length);
   S.loading=true;render();
-  await saveRatingLabelsAndThen(labels);
+  await loadRubricConfig(S.currentProgramId);
+  var labels=S.ratingLabels.slice();
+  labels.push('Level '+labels.length);
+  S.ratingLabels=labels;
+  await db.from('rubric_config').update({value:JSON.stringify(labels)}).eq('key','rating_labels').eq('program_id',S.currentProgramId);
   S.loading=false;S.msg='Level added!';render();
 }
 async function removeRatingLevel(){
-  if(ratingCount()<=2){alert('Minimum 2 levels required.');return;}
-  // Save current field values first, then remove last
-  var labels=[''];var rc=ratingCount();
-  for(var i=1;i<=rc;i++){var el=document.getElementById('rl-'+i);labels.push(el?el.value.trim()||S.ratingLabels[i]||('Level '+i):S.ratingLabels[i]||('Level '+i));}
-  labels=labels.slice(0,-1);
   S.loading=true;render();
-  await saveRatingLabelsAndThen(labels);
+  await loadRubricConfig(S.currentProgramId);
+  if(S.ratingLabels.length<=3){S.loading=false;alert('Minimum 2 levels required.');render();return;}
+  var labels=S.ratingLabels.slice(0,-1);
+  S.ratingLabels=labels;
+  await db.from('rubric_config').update({value:JSON.stringify(labels)}).eq('key','rating_labels').eq('program_id',S.currentProgramId);
   S.loading=false;S.msg='Level removed!';render();
+}
+async function resetRatingLabels(){
+  if(!confirm('Reset to default 5 levels (Beginning, Developing, Proficient, Advanced, Distinguished)?')) return;
+  var labels=['','Beginning','Developing','Proficient','Advanced','Distinguished'];
+  S.ratingLabels=labels;
+  S.loading=true;render();
+  await db.from('rubric_config').update({value:JSON.stringify(labels)}).eq('key','rating_labels').eq('program_id',S.currentProgramId);
+  await loadRubricConfig(S.currentProgramId);
+  S.loading=false;S.msg='Rating scale reset to defaults!';render();
 }
 
 // ── SUPER ADMIN ACTIONS ───────────────────────────────────────
@@ -621,7 +624,7 @@ function renderAdminUsers(){
 
 function renderRubricEditor(){
   var rc=ratingCount();var domains=S.rubricDomains;
-  return '<div><div class="card" style="margin-bottom:20px"><div class="section-title" style="font-size:17px">&#9733; Rating Scale</div><p style="font-size:13px;color:var(--textMu);margin-bottom:18px">Labels appear on all rubric forms for this program.</p><div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px">'+Array.from({length:rc},function(_,i){var rv=i+1;return '<div style="flex:1;min-width:120px"><label class="fld-label">Level '+rv+'</label><input class="fld" id="rl-'+rv+'" value="'+e(S.ratingLabels[rv]||'')+'"></div>';}).join('')+'</div><div style="display:flex;gap:10px"><button class="btn btn-navy btn-sm" onclick="saveRatingLabels()">Save Labels</button><button class="btn btn-outline btn-sm" onclick="addRatingLevel()">+ Add Level</button><button class="btn btn-danger btn-sm" onclick="removeRatingLevel()">&#8722; Remove Last</button></div></div>'
+  return '<div><div class="card" style="margin-bottom:20px"><div class="section-title" style="font-size:17px">&#9733; Rating Scale</div><p style="font-size:13px;color:var(--textMu);margin-bottom:18px">Labels appear on all rubric forms for this program.</p><div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px">'+Array.from({length:rc},function(_,i){var rv=i+1;return '<div style="flex:1;min-width:120px"><label class="fld-label">Level '+rv+'</label><input class="fld" id="rl-'+rv+'" value="'+e(S.ratingLabels[rv]||'')+'"></div>';}).join('')+'</div><div style="display:flex;gap:10px"><button class="btn btn-navy btn-sm" onclick="saveRatingLabels()">Save Labels</button><button class="btn btn-outline btn-sm" onclick="addRatingLevel()">+ Add Level</button><button class="btn btn-danger btn-sm" onclick="removeRatingLevel()">&#8722; Remove Last</button><button class="btn btn-outline btn-sm" onclick="resetRatingLabels()" style="margin-left:auto;color:var(--amber);border-color:var(--amber)">&#8635; Reset to Defaults</button></div></div>'
   +'<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><div class="section-title" style="margin-bottom:0;font-size:17px">&#9776; Evaluation Domains</div><span style="font-size:12px;color:var(--textMu)">'+domains.filter(function(d){return d.active;}).length+' active / '+domains.length+' total</span></div>'
   +domains.map(function(d){
     if(S.rubricEditId===d.id) return '<div style="background:#F8F9FF;border-radius:10px;border:1px solid var(--border);padding:16px;margin-bottom:12px"><div style="margin-bottom:10px"><label class="fld-label">Domain Name *</label><input class="fld" id="red-name-'+d.id+'" value="'+e(d.name)+'"></div><div style="margin-bottom:14px"><label class="fld-label">Description / Criteria</label><textarea class="fld" id="red-desc-'+d.id+'" rows="3">'+e(d.description)+'</textarea></div><div style="display:flex;gap:8px"><button class="btn btn-navy btn-sm" onclick="saveDomain('+d.id+')">Save</button><button class="btn btn-outline btn-sm" onclick="S.rubricEditId=null;render()">Cancel</button></div></div>';
