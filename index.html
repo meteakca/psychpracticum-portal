@@ -98,7 +98,7 @@ tr:nth-child(even) td{background:#FAFBFE}
 // ══════════════════════════════════════════════════════════════
 var SUPABASE_URL  = 'https://wemaqwbdfntgugiacgsf.supabase.co';
 var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWFxd2JkZm50Z3VnaWFjZ3NmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMTk2NDMsImV4cCI6MjA4OTU5NTY0M30.SwKny4AQ04JcfKgUWUfMDJGSHeJrpII_PYuo6zNJDZw';
-
+  
 var ACTIVITIES = ['Assessment / Evaluation','Consultation','Counseling - Individual','Counseling - Group','Crisis Intervention','Observation','Report Writing','Team Meeting / IEP','Parent / Family Consultation','Professional Development','Supervision','Other'];
 var RC_COLORS = ['','#C0392B','#C67C00','#B45309','#2E7D52','#1C7C54','#0F4C81'];
 var PROG_ICONS = {'school-psych':'&#x1F4DA;','counseling':'&#x1F9E0;'};
@@ -133,7 +133,7 @@ function sColor(p){return p>=75?'#1C7C54':p>=40?'#B45309':'#C0392B';}
 function fmt(d){if(!d)return '—';return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
 function ini(name){return String(name||'?').split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase();}
 function avt(name,size){size=size||36;return '<div class="avatar" style="width:'+size+'px;height:'+size+'px;font-size:'+Math.round(size*.36)+'px">'+ini(name)+'</div>';}
-function tag(text,cls){return '<span class="tag '+(cls||'tag-navy')+'">'+e(text)+'</span>';}
+function tag(text,cls){return '<span class="tag '+(cls||'tag-navy')+'">'+text+'</span>';}
 function pb(val,max,color){var w=pct(val,max);return '<div class="progress-track"><div class="progress-fill" style="width:'+w+'%;background:'+(color||'var(--gold)')+'"></div></div>';}
 function sumH(hours){return hours.reduce(function(s,h){return s+parseFloat(h.duration);},0);}
 function activeDomains(){return S.rubricDomains.filter(function(d){return d.active;});}
