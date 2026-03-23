@@ -780,7 +780,8 @@ function renderAdminUsers(){
             +'<div><label class="fld-label">Req. Hours</label><input class="fld" type="number" id="eu-reqs-'+p.id+'" value="'+st.required_hours+'"></div>'
             +'<div><label class="fld-label">Supervisor</label><select class="fld" id="eu-sup-'+p.id+'"><option value="">None</option>'+supOpts2+'</select></div>'
           +'</div>'
-          +'<div style="display:flex;gap:8px"><button class="btn btn-navy btn-sm" onclick="adminSaveStudentProfile(''+st.id+'',''+p.id+'')">Save</button>'
+          +'<div style="display:flex;gap:8px">'
+          +'<button class="btn btn-navy btn-sm" onclick="adminSaveStudentProfile(\''+st.id+'\',\''+p.id+'\')">Save</button>'
           +'<button class="btn btn-outline btn-sm" onclick="S.adminEditId=null;render()">Cancel</button></div>'
           +'</div></td></tr>';
       } else if(p.role==='supervisor'&&sup){
@@ -790,7 +791,8 @@ function renderAdminUsers(){
             +'<div><label class="fld-label">Title / Credentials</label><input class="fld" id="eu-title-'+p.id+'" value="'+e(sup.title||'')+'"></div>'
             +'<div><label class="fld-label">Organization</label><input class="fld" id="eu-org-'+p.id+'" value="'+e(sup.org||'')+'"></div>'
           +'</div>'
-          +'<div style="display:flex;gap:8px"><button class="btn btn-navy btn-sm" onclick="adminSaveSupervisor(''+sup.id+'',''+p.id+'')">Save</button>'
+          +'<div style="display:flex;gap:8px">'
+          +'<button class="btn btn-navy btn-sm" onclick="adminSaveSupervisor(\''+sup.id+'\',\''+p.id+'\')">Save</button>'
           +'<button class="btn btn-outline btn-sm" onclick="S.adminEditId=null;render()">Cancel</button></div>'
           +'</div></td></tr>';
       }
@@ -800,7 +802,7 @@ function renderAdminUsers(){
       +'<td style="color:var(--textMu)">'+e(p.email)+'</td>'
       +'<td>'+tag(p.role)+'</td>'
       +'<td style="color:var(--textM);font-size:12px">'+detail+'</td>'
-      +'<td>'+(p.role==='student'||p.role==='supervisor'?'<button class="btn btn-outline btn-sm" onclick="S.adminEditId='u-'+p.id+'';render()">Edit</button>':'')+'</td>'
+      +'<td>'+(p.role==='student'||p.role==='supervisor'?'<button class="btn btn-outline btn-sm" onclick="S.adminEditId=\'u-'+p.id+'\';render()">Edit</button>':'')+'</td>'
       +'</tr>';
   }).join('')+'</tbody></table></div></div></div>';
 }
