@@ -97,7 +97,7 @@ tr:nth-child(even) td{background:#FAFBFE}
 //  CONFIG
 // ══════════════════════════════════════════════════════════════
 var SUPABASE_URL  = 'https://wemaqwbdfntgugiacgsf.supabase.co';
-var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWFxd2JkZm50Z3VnaWFjZ3NmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMTk2NDMsImV4cCI6MjA4OTU5NTY0M30.SwKny4AQ04JcfKgUWUfMDJGSHeJrpII_PYuo6zNJDZw';
+var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWFxd2JkZm50Z3VnaWFjZ3NmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMTk2NDMsImV4cCI6MjA4OTU5NTY0M30.SwKny4AQ04JcfKgUWUfMDJGSHeJrpII_PYuo6zNJDZw';;
 
 var ACTIVITIES = ['Assessment / Evaluation','Consultation','Counseling - Individual','Counseling - Group','Crisis Intervention','Observation','Report Writing','Team Meeting / IEP','Parent / Family Consultation','Professional Development','Supervision','Other'];
 var RC_COLORS = ['','#C0392B','#C67C00','#B45309','#2E7D52','#1C7C54','#0F4C81'];
@@ -562,8 +562,6 @@ function msgHtml(){
 // ── AUTH ──────────────────────────────────────────────────────
 function renderRegisterForm(){
   var progOpts=S.programs.map(function(p){return '<option value="'+p.id+'">'+e(p.name)+'</option>';}).join('');
-  var roleEl=document.getElementById('r-role');
-  var currentRole=roleEl?roleEl.value:'';
   return '<div>'
     +'<div class="g2" style="margin-bottom:14px">'
       +'<div><label class="fld-label">Full Name *</label><input class="fld" id="r-name" type="text" placeholder="First Last"></div>'
@@ -574,25 +572,26 @@ function renderRegisterForm(){
         +'<select class="fld" id="r-prog"><option value="">Select program...</option>'+progOpts+'</select>'
       +'</div>'
       +'<div><label class="fld-label">I am a... *</label>'
-        +'<select class="fld" id="r-role" onchange="render()">'
+        +'<select class="fld" id="r-role" onchange="onRegRoleChange(this.value)">'
           +'<option value="">Select role...</option>'
           +'<option value="student">Practicum Student</option>'
           +'<option value="supervisor">Site Supervisor</option>'
         +'</select>'
       +'</div>'
     +'</div>'
-    // Student fields
-    +(currentRole==='student'?
-      '<div class="g2" style="margin-bottom:14px">'
+    // Always render both field sets, show/hide via JS
+    +'<div id="r-student-fields" style="display:none;margin-bottom:14px">'
+      +'<div class="g2">'
         +'<div><label class="fld-label">Placement Site</label><input class="fld" id="r-site" placeholder="e.g. Savannah Elementary School"></div>'
         +'<div><label class="fld-label">Cohort</label><input class="fld" id="r-cohort" placeholder="e.g. Spring 2026"></div>'
       +'</div>'
-    :currentRole==='supervisor'?
-      '<div class="g2" style="margin-bottom:14px">'
+    +'</div>'
+    +'<div id="r-supervisor-fields" style="display:none;margin-bottom:14px">'
+      +'<div class="g2">'
         +'<div><label class="fld-label">Title / Credentials</label><input class="fld" id="r-title" placeholder="e.g. NCSP, School Psychologist"></div>'
         +'<div><label class="fld-label">Organization</label><input class="fld" id="r-org" placeholder="e.g. Chatham County Schools"></div>'
       +'</div>'
-    :'')
+    +'</div>'
     +'<div class="g2" style="margin-bottom:20px">'
       +'<div><label class="fld-label">Password *</label><input class="fld" id="r-pass" type="password" placeholder="At least 8 characters"></div>'
       +'<div><label class="fld-label">Confirm Password *</label><input class="fld" id="r-pass2" type="password" placeholder="Repeat password"></div>'
@@ -600,6 +599,13 @@ function renderRegisterForm(){
     +'<button class="btn btn-navy" style="width:100%" onclick="doRegister()">'+(S.loading?'<span class="spin"></span>':'Create Account')+'</button>'
     +'<p style="font-size:12px;color:var(--textMu);margin-top:14px;text-align:center;line-height:1.6">After registering, a program administrator will review and activate your account before you can log in.</p>'
   +'</div>';
+}
+
+function onRegRoleChange(role){
+  var sf=document.getElementById('r-student-fields');
+  var svf=document.getElementById('r-supervisor-fields');
+  if(sf)  sf.style.display  = role==='student'    ? 'block' : 'none';
+  if(svf) svf.style.display = role==='supervisor' ? 'block' : 'none';
 }
 
 function renderAuth(){
