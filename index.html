@@ -97,7 +97,7 @@ tr:nth-child(even) td{background:#FAFBFE}
 //  CONFIG
 // ══════════════════════════════════════════════════════════════
 var SUPABASE_URL  = 'https://wemaqwbdfntgugiacgsf.supabase.co';
-var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWFxd2JkZm50Z3VnaWFjZ3NmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMTk2NDMsImV4cCI6MjA4OTU5NTY0M30.SwKny4AQ04JcfKgUWUfMDJGSHeJrpII_PYuo6zNJDZw';;
+var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlbWFxd2JkZm50Z3VnaWFjZ3NmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMTk2NDMsImV4cCI6MjA4OTU5NTY0M30.SwKny4AQ04JcfKgUWUfMDJGSHeJrpII_PYuo6zNJDZw';
 
 var ACTIVITIES = ['Assessment / Evaluation','Consultation','Counseling - Individual','Counseling - Group','Crisis Intervention','Observation','Report Writing','Team Meeting / IEP','Parent / Family Consultation','Professional Development','Supervision','Other'];
 var RC_COLORS = ['','#C0392B','#C67C00','#B45309','#2E7D52','#1C7C54','#0F4C81'];
@@ -388,6 +388,28 @@ async function adminSaveStudent(studentId){
   var supId=document.getElementById('es-sup-'+studentId).value||null;
   S.loading=true;render();
   await db.from('students').update({site:site,cohort:cohort,required_hours:reqH,supervisor_profile_id:supId||null}).eq('id',studentId);
+  S.loading=false;S.msg='Student updated!';await loadAdminData();S.adminEditId=null;render();
+}
+
+async function adminSaveSupervisor(supRecId,profileId){
+  var name=document.getElementById('eu-name-'+profileId).value.trim();
+  var title=document.getElementById('eu-title-'+profileId).value||'';
+  var org=document.getElementById('eu-org-'+profileId).value||'';
+  S.loading=true;render();
+  if(name) await db.from('profiles').update({name:name}).eq('id',profileId);
+  await db.from('supervisors').update({title:title,org:org}).eq('id',supRecId);
+  S.loading=false;S.msg='Supervisor updated!';await loadAdminData();S.adminEditId=null;render();
+}
+
+async function adminSaveStudentProfile(studentRecId,profileId){
+  var name=document.getElementById('eu-name-'+profileId).value.trim();
+  var site=document.getElementById('eu-site-'+profileId).value||'';
+  var cohort=document.getElementById('eu-cohort-'+profileId).value||'';
+  var reqH=parseInt(document.getElementById('eu-reqs-'+profileId).value)||200;
+  var supId=document.getElementById('eu-sup-'+profileId).value||null;
+  S.loading=true;render();
+  if(name) await db.from('profiles').update({name:name}).eq('id',profileId);
+  await db.from('students').update({site:site,cohort:cohort,required_hours:reqH,supervisor_profile_id:supId||null}).eq('id',studentRecId);
   S.loading=false;S.msg='Student updated!';await loadAdminData();S.adminEditId=null;render();
 }
 
@@ -740,7 +762,47 @@ function renderAdminUsers(){
   return '<div><div class="card" style="margin-bottom:18px;border-left:4px solid var(--navy)"><p style="font-size:13px;color:var(--textM);line-height:1.7"><strong>To add a new user:</strong> Go to your Supabase Dashboard &rarr; Authentication &rarr; Users &rarr; Add User. Then come back here to activate them.</p></div>'
   +(pending.length>0?'<div class="card" style="margin-bottom:18px;border-left:4px solid var(--amber)"><div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><span style="font-size:20px">&#9888;</span><div class="section-title" style="margin-bottom:0;font-size:16px">Pending Users ('+pending.length+')</div></div>'
     +pending.map(function(p){return '<div style="background:#FAFBFE;border-radius:10px;padding:16px;margin-bottom:12px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'+avt(p.name||'?',36)+'<div><strong>'+(p.name||'(no name)')+'</strong><p style="font-size:12px;color:var(--textMu)">'+e(p.email)+'</p></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px"><div><label class="fld-label">Full Name *</label><input class="fld" id="au-name-'+p.id+'" value="'+e(p.name||'')+'"></div><div><label class="fld-label">Role *</label><select class="fld" id="au-role-'+p.id+'" onchange="document.getElementById(\'au-extra-'+p.id+'\').style.display=this.value?\'block\':\'none\';document.getElementById(\'au-student-'+p.id+'\').style.display=this.value===\'student\'?\'block\':\'none\';document.getElementById(\'au-supervisor-'+p.id+'\').style.display=this.value===\'supervisor\'?\'block\':\'none\'"><option value="">Select...</option><option value="student">Student</option><option value="supervisor">Site Supervisor</option></select></div></div><div id="au-extra-'+p.id+'" style="display:none"><div id="au-student-'+p.id+'" style="display:none"><div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px"><div><label class="fld-label">Site</label><input class="fld" id="au-site-'+p.id+'"></div><div><label class="fld-label">Cohort</label><input class="fld" id="au-cohort-'+p.id+'"></div><div><label class="fld-label">Req. Hours</label><input class="fld" type="number" id="au-reqs-'+p.id+'" value="200"></div><div><label class="fld-label">Supervisor</label><select class="fld" id="au-sup-'+p.id+'"><option value="">None</option>'+supOpts+'</select></div></div></div><div id="au-supervisor-'+p.id+'" style="display:none"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px"><div><label class="fld-label">Title</label><input class="fld" id="au-title-'+p.id+'"></div><div><label class="fld-label">Organization</label><input class="fld" id="au-org-'+p.id+'"></div></div></div></div><button class="btn btn-navy btn-sm" onclick="adminActivateUser(\''+p.id+'\')">Activate Account</button></div>';}).join('')+'</div>':'')
-  +'<div class="card"><div class="section-title" style="font-size:16px">Active Users — '+e(currentProgram().name||'')+'</div><div style="overflow-x:auto"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Details</th></tr></thead><tbody>'+S.allProfiles.filter(function(p){return !!p.role&&p.role!=='super_admin';}).map(function(p){var sup=S.allSupervisors.find(function(s){return s.profile_id===p.id;});var st=S.allStudents.find(function(s){return s.profile_id===p.id;});var supName=st?S.allProfiles.find(function(x){return x.id===st.supervisor_profile_id;}):null;var detail='';if(p.role==='student'&&st) detail='Site: '+e(st.site||'—')+(supName?' &middot; '+e(supName.name):'');if(p.role==='supervisor'&&sup) detail=e(sup.title||'')+(sup.org?' &middot; '+e(sup.org):'');return '<tr><td><div style="display:flex;align-items:center;gap:8px">'+avt(p.name,30)+'<span style="font-weight:600">'+e(p.name)+'</span></div></td><td style="color:var(--textMu)">'+e(p.email)+'</td><td>'+tag(p.role)+'</td><td style="color:var(--textM);font-size:12px">'+detail+'</td></tr>';}).join('')+'</tbody></table></div></div></div>';
+  +'<div class="card"><div class="section-title" style="font-size:16px">Active Users — '+e(currentProgram().name||'')+'</div><div style="overflow-x:auto"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Details</th><th></th></tr></thead><tbody>'+S.allProfiles.filter(function(p){return !!p.role&&p.role!=='super_admin';}).map(function(p){
+    var sup=S.allSupervisors.find(function(s){return s.profile_id===p.id;});
+    var st=S.allStudents.find(function(s){return s.profile_id===p.id;});
+    var supName=st?S.allProfiles.find(function(x){return x.id===st.supervisor_profile_id;}):null;
+    var supOpts2=S.allProfiles.filter(function(x){return x.role==='supervisor';}).map(function(sv){return '<option value="'+sv.id+'"'+(st&&st.supervisor_profile_id===sv.id?' selected':'')+'>'+e(sv.name)+'</option>';}).join('');
+    var detail='';
+    if(p.role==='student'&&st) detail='Site: '+e(st.site||'—')+(supName?' &middot; '+e(supName.name):'');
+    if(p.role==='supervisor'&&sup) detail=e(sup.title||'')+(sup.org?' &middot; '+e(sup.org):'');
+    if(S.adminEditId==='u-'+p.id){
+      if(p.role==='student'&&st){
+        return '<tr><td colspan="5"><div style="background:#F8F9FF;border-radius:8px;padding:16px">'
+          +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:10px;align-items:end;margin-bottom:10px">'
+            +'<div><label class="fld-label">Name</label><input class="fld" id="eu-name-'+p.id+'" value="'+e(p.name||'')+'"></div>'
+            +'<div><label class="fld-label">Site</label><input class="fld" id="eu-site-'+p.id+'" value="'+e(st.site||'')+'"></div>'
+            +'<div><label class="fld-label">Cohort</label><input class="fld" id="eu-cohort-'+p.id+'" value="'+e(st.cohort||'')+'"></div>'
+            +'<div><label class="fld-label">Req. Hours</label><input class="fld" type="number" id="eu-reqs-'+p.id+'" value="'+st.required_hours+'"></div>'
+            +'<div><label class="fld-label">Supervisor</label><select class="fld" id="eu-sup-'+p.id+'"><option value="">None</option>'+supOpts2+'</select></div>'
+          +'</div>'
+          +'<div style="display:flex;gap:8px"><button class="btn btn-navy btn-sm" onclick="adminSaveStudentProfile(''+st.id+'',''+p.id+'')">Save</button>'
+          +'<button class="btn btn-outline btn-sm" onclick="S.adminEditId=null;render()">Cancel</button></div>'
+          +'</div></td></tr>';
+      } else if(p.role==='supervisor'&&sup){
+        return '<tr><td colspan="5"><div style="background:#F8F9FF;border-radius:8px;padding:16px">'
+          +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end;margin-bottom:10px">'
+            +'<div><label class="fld-label">Name</label><input class="fld" id="eu-name-'+p.id+'" value="'+e(p.name||'')+'"></div>'
+            +'<div><label class="fld-label">Title / Credentials</label><input class="fld" id="eu-title-'+p.id+'" value="'+e(sup.title||'')+'"></div>'
+            +'<div><label class="fld-label">Organization</label><input class="fld" id="eu-org-'+p.id+'" value="'+e(sup.org||'')+'"></div>'
+          +'</div>'
+          +'<div style="display:flex;gap:8px"><button class="btn btn-navy btn-sm" onclick="adminSaveSupervisor(''+sup.id+'',''+p.id+'')">Save</button>'
+          +'<button class="btn btn-outline btn-sm" onclick="S.adminEditId=null;render()">Cancel</button></div>'
+          +'</div></td></tr>';
+      }
+    }
+    return '<tr>'
+      +'<td><div style="display:flex;align-items:center;gap:8px">'+avt(p.name,30)+'<span style="font-weight:600">'+e(p.name)+'</span></div></td>'
+      +'<td style="color:var(--textMu)">'+e(p.email)+'</td>'
+      +'<td>'+tag(p.role)+'</td>'
+      +'<td style="color:var(--textM);font-size:12px">'+detail+'</td>'
+      +'<td>'+(p.role==='student'||p.role==='supervisor'?'<button class="btn btn-outline btn-sm" onclick="S.adminEditId='u-'+p.id+'';render()">Edit</button>':'')+'</td>'
+      +'</tr>';
+  }).join('')+'</tbody></table></div></div></div>';
 }
 
 function renderRubricEditor(){
