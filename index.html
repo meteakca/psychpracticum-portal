@@ -122,6 +122,7 @@ var S = {
   // super admin
   superTab:'programs', superAdminViewProgramId:null,
   adminViewStudentId:null,
+  superEditId:null,
   // ui
   loading:false, msg:null, err:null, authTab:'login'
 };
@@ -269,7 +270,7 @@ async function init(){
   render();
   db.auth.onAuthStateChange(async function(event){
     if(event==='SIGNED_OUT'){
-      Object.assign(S,{screen:'auth',profile:null,msg:null,err:null,authTab:'login',programs:[],currentProgramId:null,rubricDomains:[],ratingLabels:[],studentTab:'dashboard',supSelected:null,supDetailTab:'detail',supRubricState:{},adminTab:'overview',allProfiles:[],allStudents:[],allSupervisors:[],allHours:[],allRubrics:[],adminEditId:null,rubricEditId:null,adminViewStudentId:null,superTab:'programs',superAdminViewProgramId:null,loading:false,studentRec:null,supProfile:null,hours:[],rubric:null,supStudents:[],supStudentProfiles:{},supHours:{},supRubrics:{}});
+      Object.assign(S,{screen:'auth',profile:null,msg:null,err:null,authTab:'login',programs:[],currentProgramId:null,rubricDomains:[],ratingLabels:[],studentTab:'dashboard',supSelected:null,supDetailTab:'detail',supRubricState:{},adminTab:'overview',allProfiles:[],allStudents:[],allSupervisors:[],allHours:[],allRubrics:[],adminEditId:null,rubricEditId:null,adminViewStudentId:null,superEditId:null,superTab:'programs',superAdminViewProgramId:null,loading:false,studentRec:null,supProfile:null,hours:[],rubric:null,supStudents:[],supStudentProfiles:{},supHours:{},supRubrics:{}});
       render();
     }
   });
@@ -490,6 +491,39 @@ async function resetRatingLabels(){
 }
 
 // ── SUPER ADMIN ACTIONS ───────────────────────────────────────
+function setSuperEdit(btn){S.superEditId=btn.getAttribute('data-id');render();}
+function superSaveStudentBtn(btn){superSaveStudent(btn.getAttribute('data-stid'),btn.getAttribute('data-pid'));}
+function superSaveSupervisorBtn(btn){superSaveSupervisor(btn.getAttribute('data-supid'),btn.getAttribute('data-pid'));}
+function superSaveAdminBtn(btn){superSaveAdmin(btn.getAttribute('data-pid'));}
+async function superSaveStudent(stId,profileId){
+  var name=document.getElementById('se-name-'+profileId).value.trim();
+  var progId=document.getElementById('se-prog-'+profileId).value||null;
+  var site=document.getElementById('se-site-'+profileId).value||'';
+  var cohort=document.getElementById('se-cohort-'+profileId).value||'';
+  var reqH=parseInt(document.getElementById('se-reqs-'+profileId).value)||200;
+  var supId=document.getElementById('se-sup-'+profileId).value||null;
+  S.loading=true;render();
+  if(name) await db.from('profiles').update({name:name,program_id:progId}).eq('id',profileId);
+  await db.from('students').update({site:site,cohort:cohort,required_hours:reqH,supervisor_profile_id:supId||null,program_id:progId}).eq('id',stId);
+  S.loading=false;S.msg='Student updated!';S.superEditId=null;await loadSuperAdminData();render();
+}
+async function superSaveSupervisor(supRecId,profileId){
+  var name=document.getElementById('se-name-'+profileId).value.trim();
+  var progId=document.getElementById('se-prog-'+profileId).value||null;
+  var title=document.getElementById('se-title-'+profileId).value||'';
+  var org=document.getElementById('se-org-'+profileId).value||'';
+  S.loading=true;render();
+  if(name) await db.from('profiles').update({name:name,program_id:progId}).eq('id',profileId);
+  await db.from('supervisors').update({title:title,org:org,program_id:progId}).eq('id',supRecId);
+  S.loading=false;S.msg='Supervisor updated!';S.superEditId=null;await loadSuperAdminData();render();
+}
+async function superSaveAdmin(profileId){
+  var name=document.getElementById('se-name-'+profileId).value.trim();
+  var progId=document.getElementById('se-prog-'+profileId).value||null;
+  S.loading=true;render();
+  await db.from('profiles').update({name:name,program_id:progId}).eq('id',profileId);
+  S.loading=false;S.msg='Admin updated!';S.superEditId=null;await loadSuperAdminData();render();
+}
 async function createProgram(){
   var name=document.getElementById('np-name').value.trim();
   var slug=document.getElementById('np-slug').value.trim().toLowerCase().replace(/\s+/g,'-');
@@ -920,10 +954,65 @@ function renderSuperUsers(){
     }).join('')
 
     +'</div>':'')
-  +'<div class="card"><div class="section-title" style="font-size:16px">All Active Users</div><div style="overflow-x:auto"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Program</th></tr></thead><tbody>'
+  +'<div class="card"><div class="section-title" style="font-size:16px">All Active Users</div><div style="overflow-x:auto"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Program</th><th></th></tr></thead><tbody>'
   +active.map(function(p){
     var prog=S.programs.find(function(x){return x.id===p.program_id;})||{};
-    return '<tr><td><div style="display:flex;align-items:center;gap:8px">'+avt(p.name,30)+'<span style="font-weight:600">'+e(p.name)+'</span></div></td><td style="color:var(--textMu)">'+e(p.email)+'</td><td>'+tag(p.role==='super_admin'?'Department Chair':p.role,p.role==='super_admin'?'tag-gold':'tag-navy')+'</td><td>'+e(prog.name||'—')+'</td></tr>';
+    var sup=S.allSupervisors.find(function(s){return s.profile_id===p.id;});
+    var st=S.allStudents.find(function(s){return s.profile_id===p.id;});
+    var allSupOpts2=S.allProfiles.filter(function(x){return x.role==='supervisor';}).map(function(sv){
+      var svProg=S.programs.find(function(x){return x.id===sv.program_id;})||{};
+      return '<option value="'+sv.id+'"'+(st&&st.supervisor_profile_id===sv.id?' selected':'')+'>'+e(sv.name)+(svProg.name?' ('+e(svProg.name)+')':'')+'</option>';
+    }).join('');
+    var progOptsEdit=S.programs.map(function(pg){return '<option value="'+pg.id+'"'+(p.program_id===pg.id?' selected':'')+'>'+e(pg.name)+'</option>';}).join('');
+    if(S.superEditId===p.id){
+      if(p.role==='student'&&st){
+        return '<tr><td colspan="5"><div style="background:#F8F9FF;border-radius:8px;padding:16px">'
+          +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr;gap:10px;align-items:end;margin-bottom:10px">'
+            +'<div><label class="fld-label">Name</label><input class="fld" id="se-name-'+p.id+'" value="'+e(p.name||'')+'"></div>'
+            +'<div><label class="fld-label">Program</label><select class="fld" id="se-prog-'+p.id+'"><option value="">None</option>'+progOptsEdit+'</select></div>'
+            +'<div><label class="fld-label">Site</label><input class="fld" id="se-site-'+p.id+'" value="'+e(st.site||'')+'"></div>'
+            +'<div><label class="fld-label">Cohort</label><input class="fld" id="se-cohort-'+p.id+'" value="'+e(st.cohort||'')+'"></div>'
+            +'<div><label class="fld-label">Req. Hours</label><input class="fld" type="number" id="se-reqs-'+p.id+'" value="'+st.required_hours+'"></div>'
+            +'<div><label class="fld-label">Supervisor</label><select class="fld" id="se-sup-'+p.id+'"><option value="">None</option>'+allSupOpts2+'</select></div>'
+          +'</div>'
+          +'<div style="display:flex;gap:8px">'
+            +'<button class="btn btn-navy btn-sm" onclick="superSaveStudentBtn(this)" data-stid="'+st.id+'" data-pid="'+p.id+'">Save</button>'
+            +'<button class="btn btn-outline btn-sm" onclick="S.superEditId=null;render()">Cancel</button>'
+          +'</div>'
+          +'</div></td></tr>';
+      } else if(p.role==='supervisor'&&sup){
+        return '<tr><td colspan="5"><div style="background:#F8F9FF;border-radius:8px;padding:16px">'
+          +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;align-items:end;margin-bottom:10px">'
+            +'<div><label class="fld-label">Name</label><input class="fld" id="se-name-'+p.id+'" value="'+e(p.name||'')+'"></div>'
+            +'<div><label class="fld-label">Program</label><select class="fld" id="se-prog-'+p.id+'"><option value="">None</option>'+progOptsEdit+'</select></div>'
+            +'<div><label class="fld-label">Title / Credentials</label><input class="fld" id="se-title-'+p.id+'" value="'+e(sup.title||'')+'"></div>'
+            +'<div><label class="fld-label">Organization</label><input class="fld" id="se-org-'+p.id+'" value="'+e(sup.org||'')+'"></div>'
+          +'</div>'
+          +'<div style="display:flex;gap:8px">'
+            +'<button class="btn btn-navy btn-sm" onclick="superSaveSupervisorBtn(this)" data-supid="'+sup.id+'" data-pid="'+p.id+'">Save</button>'
+            +'<button class="btn btn-outline btn-sm" onclick="S.superEditId=null;render()">Cancel</button>'
+          +'</div>'
+          +'</div></td></tr>';
+      } else if(p.role==='admin'){
+        return '<tr><td colspan="5"><div style="background:#F8F9FF;border-radius:8px;padding:16px">'
+          +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end;margin-bottom:10px">'
+            +'<div><label class="fld-label">Name</label><input class="fld" id="se-name-'+p.id+'" value="'+e(p.name||'')+'"></div>'
+            +'<div><label class="fld-label">Program</label><select class="fld" id="se-prog-'+p.id+'"><option value="">None</option>'+progOptsEdit+'</select></div>'
+          +'</div>'
+          +'<div style="display:flex;gap:8px">'
+            +'<button class="btn btn-navy btn-sm" onclick="superSaveAdminBtn(this)" data-pid="'+p.id+'">Save</button>'
+            +'<button class="btn btn-outline btn-sm" onclick="S.superEditId=null;render()">Cancel</button>'
+          +'</div>'
+          +'</div></td></tr>';
+      }
+    }
+    return '<tr>'
+      +'<td><div style="display:flex;align-items:center;gap:8px">'+avt(p.name,30)+'<span style="font-weight:600">'+e(p.name)+'</span></div></td>'
+      +'<td style="color:var(--textMu)">'+e(p.email)+'</td>'
+      +'<td>'+tag(p.role==='super_admin'?'Department Chair':p.role,p.role==='super_admin'?'tag-gold':'tag-navy')+'</td>'
+      +'<td>'+e(prog.name||'—')+'</td>'
+      +'<td>'+(p.role!=='super_admin'?'<button class="btn btn-outline btn-sm" onclick="setSuperEdit(this)" data-id="'+p.id+'">Edit</button>':'')+'</td>'
+      +'</tr>';
   }).join('')
   +'</tbody></table></div></div></div>';
 }
